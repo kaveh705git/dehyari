@@ -1,15 +1,16 @@
 @font-face {
-  font-family: 'Vazir';
-  src: url('fonts/Vazir-Medium.woff') format('woff');
+  font-family: 'Vazirmatn';
+  src: url('fonts/Vazir-Medium.woff') format('woff'); /* نام و پسوند دقیق */
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
+
 * { 
   box-sizing: border-box; 
   margin: 0; 
   padding: 0; 
-  font-family: 'Vazir', sans-serif; /* فونت وزیر جایگزین تاهوما شد */
+  font-family: 'Vazirmatn', Tahoma, sans-serif; /* استفاده از فونت در کل سایت */
 }
 /* بقیه کدهای css شما از اینجا به بعد بدون تغییر ادامه پیدا می‌کند... */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: Tahoma, sans-serif; }
