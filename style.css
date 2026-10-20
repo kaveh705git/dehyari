@@ -1,11 +1,10 @@
 @font-face {
   font-family: 'Vazirmatn';
-  src: url('fonts/Vazirmatn.woff2') format('woff2');
+  src: url('fonts/Vazirmatn-Bold.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
-
 * { 
   box-sizing: border-box; 
   margin: 0; 
