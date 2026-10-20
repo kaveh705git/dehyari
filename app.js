@@ -5,6 +5,28 @@ const FALLBACK = {
 };
 let DATA = null, editingDehyariIndex = null;
 
+// 🔐 تنظیمات رمز عبور ورود به سایت (برای تغییر، عدد 1234 را عوض کنید)
+const SITE_PASSWORD = "1234";
+
+window.checkSitePassword = function() {
+  const inputPass = document.getElementById("sitePassInput").value;
+  if (inputPass === SITE_PASSWORD) {
+    document.getElementById("login-gate").style.display = "none";
+    document.getElementById("main-site").style.display = "block";
+    localStorage.setItem("dehyari_site_logged_in", "true");
+  } else {
+    document.getElementById("sitePassError").style.display = "block";
+  }
+};
+
+function checkSiteGate() {
+  const isLogged = localStorage.getItem("dehyari_site_logged_in");
+  if (isLogged === "true") {
+    document.getElementById("login-gate").style.display = "none";
+    document.getElementById("main-site").style.display = "block";
+  }
+}
+
 function loadInitialData() {
   if (typeof INITIAL_DATA !== "undefined") { DATA = JSON.parse(JSON.stringify(INITIAL_DATA)); localStorage.setItem("dehyari_panel_v7", JSON.stringify(DATA)); } 
   else { DATA = JSON.parse(localStorage.getItem("dehyari_panel_v7") || JSON.stringify(FALLBACK)); }
@@ -28,7 +50,6 @@ function populateSelect() {
   if (cur) sel.value = cur;
 }
 
-// نمایش دهیاری با منوهای افقی
 function showDehyari(id) {
   const box = document.getElementById("content");
   if (id === "" || id === null) { box.innerHTML = '<div class="empty-msg">برای مشاهده اطلاعات، از منوی بالا یک دهیاری انتخاب کنید.</div>'; return; }
@@ -66,7 +87,8 @@ function renderTabContent(d, secKey) {
     });
   }
   contentArea.innerHTML = inner;
-    }
+}
+
 async function hashPassword(pass) { const enc = new TextEncoder().encode(pass + "|salt"); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join(""); }
 function getStoredHash() { return localStorage.getItem("dehyari_admin_hash_v7"); }
 function setStoredHash(hash) { localStorage.setItem("dehyari_admin_hash_v7", hash); }
@@ -229,5 +251,5 @@ window.handleHeaderClick = function() {
   if (clickCount >= 6) { clickCount = 0; clearTimeout(clickTimer); openAdmin(); }
 };
 
-loadInitialData(); renderSite(); showDehyari("");
+loadInitialData(); renderSite(); showDehyari(""); checkSiteGate();
 document.getElementById("adminModal").addEventListener("click", function(e) { if (e.target === this) closeAdmin(); });
