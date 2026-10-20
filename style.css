@@ -17,12 +17,32 @@ select { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #4fc3f7;
 #content { max-width: 800px; margin: 20px auto 40px; padding: 0 15px; }
 .card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(2, 136, 209, 0.12); overflow: hidden; }
 .card-header { background: #4fc3f7; color: white; padding: 15px 20px; font-size: 1.2rem; font-weight: bold; }
-
 /* استایل منوهای افقی */
-.tabs-container { display: flex; overflow-x: auto; background: #f8fdff; border-bottom: 2px solid #e1f5fe; }
-.tabs-container::-webkit-scrollbar { height: 4px; }
-.tabs-container::-webkit-scrollbar-thumb { background: #b3e5fc; border-radius: 4px; }
-.main-tab-btn { padding: 15px 20px; background: none; border: none; border-bottom: 3px solid transparent; color: #6ba3c9; font-size: 0.95rem; font-weight: bold; cursor: pointer; white-space: nowrap; transition: all 0.3s; }
+.tabs-container { 
+  display: flex; 
+  width: 100%; 
+  background: #f8fdff; 
+  border-bottom: 2px solid #e1f5fe; 
+  overflow-x: auto; /* اگر در گوشی خیلی کوچک بود، اسکرول بخورد */
+}
+
+.main-tab-btn { 
+  flex: 1; 
+  padding: 12px 5px; 
+  background: none; 
+  border: none; 
+  border-bottom: 3px solid transparent; 
+  color: #6ba3c9; 
+  font-size: 0.85rem; /* کمی کوچک‌تر برای جا شدن در گوشی */
+  font-weight: bold; 
+  cursor: pointer; 
+  white-space: nowrap; 
+  transition: all 0.3s; 
+  text-align: center;
+}
+
+.main-tab-btn:hover { background: #e1f5fe; color: #0277bd; }
+.main-tab-btn.active { color: #0277bd; border-bottom-color: #29b6f6; background: #e1f5fe; }
 .main-tab-btn:hover { background: #e1f5fe; color: #0277bd; }
 .main-tab-btn.active { color: #0277bd; border-bottom-color: #29b6f6; background: #e1f5fe; }
 
