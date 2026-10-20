@@ -20,7 +20,7 @@ const FALLBACK = {
   ]
 };
 
-let DATA = null, editingDehyariIndex = null, clickCount = 0, clickTimer = null;
+let DATA = null, editingDehyariIndex = null;
 
 function loadInitialData() {
   if (typeof INITIAL_DATA !== "undefined") {
@@ -72,8 +72,7 @@ function showDehyari(id) {
     else {
       Object.entries(fields).forEach(([k, v]) => {
         if (v && typeof v === 'object' && v.type === 'image') {
-          inner += `<div class="info-row" style="flex-direction:column; align-items:flex-start;">
-            <span class="label">${escapeHtml(k)}:</span>`;
+          inner += `<div class="info-row" style="flex-direction:column; align-items:flex-start;"><span class="label">${escapeHtml(k)}:</span>`;
           if (v.img) inner += `<img src="${v.img}" style="max-width:100%; border-radius:8px; margin:8px 0; max-height:300px; object-fit:contain;">`;
           if (v.text) inner += `<span style="color:#264a6e; margin-top:5px;">${escapeHtml(v.text)}</span>`;
           inner += `</div>`;
@@ -82,15 +81,9 @@ function showDehyari(id) {
         }
       });
     }
-    html += `<div class="accordion-item">
-      <button class="accordion-btn" onclick="toggleAcc(this)">
-        <span>${escapeHtml(sec.label)}</span><span class="arrow">▼</span>
-      </button>
-      <div class="accordion-content"><div class="accordion-content-inner">${inner}</div></div>
-    </div>`;
+    html += `<div class="accordion-item"><button class="accordion-btn" onclick="toggleAcc(this)"><span>${escapeHtml(sec.label)}</span><span class="arrow">▼</span></button><div class="accordion-content"><div class="accordion-content-inner">${inner}</div></div></div>`;
   });
-  html += "</div>";
-  box.innerHTML = html;
+  box.innerHTML = html + "</div>";
   const first = box.querySelector(".accordion-btn");
   if (first) toggleAcc(first);
 }
@@ -168,13 +161,7 @@ function renderSectionsTab() {
   let html = `<div class="hint">📑 منوهای سایت را مدیریت کنید.</div>`;
   DATA.sections.forEach((sec, i) => {
     const fieldCount = countFieldsInSection(sec.key);
-    html += `<div class="list-item">
-      <div><span class="name">${escapeHtml(sec.label)}</span> <span class="badge">${fieldCount} فیلد</span></div>
-      <div>
-        <button class="btn btn-sm btn-primary" onclick="editSection(${i})">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteSection(${i})">🗑️</button>
-      </div>
-    </div>`;
+    html += `<div class="list-item"><div><span class="name">${escapeHtml(sec.label)}</span> <span class="badge">${fieldCount} فیلد</span></div><div><button class="btn btn-sm btn-primary" onclick="editSection(${i})">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteSection(${i})">🗑️</button></div></div>`;
   });
   html += `<button class="btn btn-success" style="margin-top:12px;width:100%;" onclick="addSection()">➕ افزودن بخش جدید</button>`;
   box.innerHTML = html;
@@ -194,12 +181,14 @@ function addSection() {
   DATA.dehyaris.forEach(d => { d.fields[key] = {}; });
   persist(); renderSectionsTab(); populateSelect();
 }
+
 function editSection(i) {
   const sec = DATA.sections[i];
   const nl = prompt("نام جدید بخش:", sec.label);
   if (!nl) return;
   sec.label = nl; persist(); renderSectionsTab(); populateSelect();
 }
+
 function deleteSection(i) {
   if (!confirm("این بخش و همه فیلدهایش حذف شود؟")) return;
   const key = DATA.sections[i].key;
@@ -207,7 +196,6 @@ function deleteSection(i) {
   DATA.dehyaris.forEach(d => { delete d.fields[key]; });
   persist(); renderSectionsTab();
 }
-
 function renderDehyarisTab() {
   const box = document.getElementById("tab-dehyaris");
   if (editingDehyariIndex === null) {
@@ -215,13 +203,7 @@ function renderDehyarisTab() {
     if (DATA.dehyaris.length === 0) html += `<div class="empty-box">هیچ دهیاری ثبت نشده.</div>`;
     else {
       DATA.dehyaris.forEach((d, i) => {
-        html += `<div class="list-item">
-          <div class="name">${escapeHtml(d.name)}</div>
-          <div>
-            <button class="btn btn-sm btn-primary" onclick="editDehyari(${i})">✏️</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteDehyari(${i})">🗑️</button>
-          </div>
-        </div>`;
+        html += `<div class="list-item"><div class="name">${escapeHtml(d.name)}</div><div><button class="btn btn-sm btn-primary" onclick="editDehyari(${i})">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteDehyari(${i})">🗑️</button></div></div>`;
       });
     }
     html += `<button class="btn btn-success" style="margin-top:12px;width:100%;" onclick="addDehyari()">➕ افزودن دهیاری جدید</button>`;
@@ -249,19 +231,11 @@ function renderFieldsForSection(secKey) {
   else {
     entries.forEach(([k, v], idx) => {
       const isImg = (v && typeof v === 'object' && v.type === 'image');
-      html += `<div class="field-row" style="flex-direction:column; align-items:stretch; background:#f8fdff;">
-        <div style="display:flex; gap:6px; margin-bottom:8px;">
-          <input class="field-key" style="flex:1;" type="text" value="${escapeHtml(k)}" onchange="renameField('${secKey}', ${idx}, this.value)">
-          <button class="icon-btn" onclick="deleteField('${secKey}', ${idx})">✕</button>
-        </div>`;
+      html += `<div class="field-row" style="flex-direction:column; align-items:stretch; background:#f8fdff;"><div style="display:flex; gap:6px; margin-bottom:8px;"><input class="field-key" style="flex:1;" type="text" value="${escapeHtml(k)}" onchange="renameField('${secKey}', ${idx}, this.value)"><button class="icon-btn" onclick="deleteField('${secKey}', ${idx})">✕</button></div>`;
       if (isImg) {
         html += `<div style="background:white; padding:10px; border-radius:6px; border:1px solid #b3e5fc;">`;
         if (v.img) html += `<img src="${v.img}" style="max-width:100%; max-height:150px; border-radius:6px; margin-bottom:8px; display:block;">`;
-        html += `<label style="font-size:0.8rem; color:#0277bd;">آپلود عکس:</label>
-          <input type="file" accept="image/*" onchange="uploadImage(event, '${secKey}', ${idx})" style="font-size:0.8rem; margin-bottom:8px; display:block;">
-          <label style="font-size:0.8rem; color:#0277bd;">توضیحات زیر عکس:</label>
-          <textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea>
-        </div>`;
+        html += `<label style="font-size:0.8rem; color:#0277bd;">آپلود عکس:</label><input type="file" accept="image/*" onchange="uploadImage(event, '${secKey}', ${idx})" style="font-size:0.8rem; margin-bottom:8px; display:block;"><label style="font-size:0.8rem; color:#0277bd;">توضیحات زیر عکس:</label><textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea></div>`;
       } else {
         html += `<div class="field-val">`;
         if (String(v).length > 60) html += `<textarea onchange="updateFieldValue('${secKey}', ${idx}, this.value)">${escapeHtml(v)}</textarea>`;
@@ -283,12 +257,15 @@ function addDehyari() {
   editingDehyariIndex = DATA.dehyaris.length - 1;
   renderDehyarisTab(); populateSelect();
 }
+
 function editDehyari(i) { editingDehyariIndex = i; renderDehyarisTab(); }
+
 function deleteDehyari(i) {
   if (!confirm(`«${DATA.dehyaris[i].name}» حذف شود؟`)) return;
   DATA.dehyaris.splice(i, 1); persist(); renderDehyarisTab(); populateSelect();
   showDehyari(document.getElementById("dehyariSelect").value);
 }
+
 function updateDehyariName(val) { DATA.dehyaris[editingDehyariIndex].name = val; persist(); populateSelect(); }
 
 function addFieldToSection(secKey) {
@@ -310,9 +287,7 @@ function renameField(secKey, idx, newKey) {
   const oldKey = entries[idx][0];
   if (oldKey === newKey) return;
   const nf = {};
-  Object.entries(d.fields[secKey]).forEach(([k, v]) => {
-    if (k === oldKey) nf[newKey] = v; else nf[k] = v;
-  });
+  Object.entries(d.fields[secKey]).forEach(([k, v]) => { if (k === oldKey) nf[newKey] = v; else nf[k] = v; });
   d.fields[secKey] = nf; persist(); renderFieldsForSection(secKey);
 }
 
@@ -321,6 +296,7 @@ function updateFieldValue(secKey, idx, val) {
   const keys = Object.keys(d.fields[secKey]);
   if (keys[idx]) { d.fields[secKey][keys[idx]] = val; persist(); }
 }
+
 function updateImgText(secKey, idx, val) {
   const d = DATA.dehyaris[editingDehyariIndex];
   const keys = Object.keys(d.fields[secKey]);
@@ -363,13 +339,9 @@ function deleteField(secKey, idx) {
 
 function renderSettingsTab() {
   const box = document.getElementById("tab-settings");
-  box.innerHTML = `
-    <div class="hint">⚙️ تنظیمات کلی.</div>
-    <div class="form-group"><label>عنوان اصلی:</label><input type="text" id="setting-title" value="${escapeHtml(DATA.siteTitle || "")}"></div>
-    <div class="form-group"><label>زیرعنوان:</label><input type="text" id="setting-sub" value="${escapeHtml(DATA.siteSub || "")}"></div>
-    <button class="btn btn-success" style="width:100%;" onclick="saveSettings()">💾 ذخیره</button>
-  `;
+  box.innerHTML = `<div class="hint">⚙️ تنظیمات کلی.</div><div class="form-group"><label>عنوان اصلی:</label><input type="text" id="setting-title" value="${escapeHtml(DATA.siteTitle || "")}"></div><div class="form-group"><label>زیرعنوان:</label><input type="text" id="setting-sub" value="${escapeHtml(DATA.siteSub || "")}"></div><button class="btn btn-success" style="width:100%;" onclick="saveSettings()">💾 ذخیره</button>`;
 }
+
 function saveSettings() {
   DATA.siteTitle = document.getElementById("setting-title").value.trim() || "دهیاری‌ها";
   DATA.siteSub = document.getElementById("setting-sub").value.trim();
@@ -378,16 +350,9 @@ function saveSettings() {
 
 function renderSecurityTab() {
   const box = document.getElementById("tab-security");
-  box.innerHTML = `
-    <div class="hint">🔐 مدیریت رمز ادمین.</div>
-    <div class="form-group"><label>رمز فعلی:</label><input type="password" id="sec-old-pass"></div>
-    <div class="form-group"><label>رمز جدید:</label><input type="password" id="sec-new-pass"></div>
-    <div class="form-group"><label>تکرار رمز جدید:</label><input type="password" id="sec-new-pass2"></div>
-    <button class="btn btn-warning" style="width:100%;" onclick="changePassword()">🔄 تغییر رمز</button>
-    <div class="section-title" style="color:#c62828; margin-top:25px;">⚠️ منطقه خطر</div>
-    <button class="btn btn-danger" style="width:100%;" onclick="emergencyReset()">🆘 ریست کامل</button>
-  `;
+  box.innerHTML = `<div class="hint">🔐 مدیریت رمز ادمین.</div><div class="form-group"><label>رمز فعلی:</label><input type="password" id="sec-old-pass"></div><div class="form-group"><label>رمز جدید:</label><input type="password" id="sec-new-pass"></div><div class="form-group"><label>تکرار رمز جدید:</label><input type="password" id="sec-new-pass2"></div><button class="btn btn-warning" style="width:100%;" onclick="changePassword()">🔄 تغییر رمز</button><div class="section-title" style="color:#c62828; margin-top:25px;">⚠️ منطقه خطر</div><button class="btn btn-danger" style="width:100%;" onclick="emergencyReset()">🆘 ریست کامل</button>`;
 }
+
 async function changePassword() {
   const oldPass = document.getElementById("sec-old-pass").value;
   const newPass = document.getElementById("sec-new-pass").value;
@@ -401,32 +366,22 @@ async function changePassword() {
 
 function renderBackupTab() {
   const box = document.getElementById("tab-backup");
-  box.innerHTML = `
-    <div class="hint">💾 برای اعمال دائمی تغییرات برای همه کاربران، فایل data.js را دانلود کرده و در گیت‌هاب آپلود کنید.</div>
-    <div class="section-title">📤 خروجی</div>
-    <button class="btn btn-success" style="width:100%; margin-bottom:10px;" onclick="downloadDataJs()">⬇️ دانلود فایل data.js</button>
-    <button class="btn btn-primary" style="width:100%; margin-bottom:20px;" onclick="downloadJson()">⬇️ دانلود فایل JSON (پشتیبان)</button>
-    <div class="section-title">📥 ورودی</div>
-    <input type="file" id="uploadFile" accept=".js,.json" style="display:none" onchange="handleFileUpload(event)">
-    <button class="btn btn-warning" style="width:100%;" onclick="document.getElementById('uploadFile').click()">📂 بارگذاری فایل پشتیبان</button>
-  `;
+  box.innerHTML = `<div class="hint">💾 برای اعمال دائمی تغییرات برای همه کاربران، فایل data.js را دانلود کرده و در گیت‌هاب آپلود کنید.</div><div class="section-title">📤 خروجی</div><button class="btn btn-success" style="width:100%; margin-bottom:10px;" onclick="downloadDataJs()">⬇️ دانلود فایل data.js</button><button class="btn btn-primary" style="width:100%; margin-bottom:20px;" onclick="downloadJson()">⬇️ دانلود فایل JSON (پشتیبان)</button><div class="section-title">📥 ورودی</div><input type="file" id="uploadFile" accept=".js,.json" style="display:none" onchange="handleFileUpload(event)"><button class="btn btn-warning" style="width:100%;" onclick="document.getElementById('uploadFile').click()">📂 بارگذاری فایل پشتیبان</button>`;
 }
 
 function downloadDataJs() {
   const jsContent = "const INITIAL_DATA = " + JSON.stringify(DATA, null, 2) + ";\n";
   const blob = new Blob([jsContent], { type: "text/javascript;charset=utf-8" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "data.js";
-  a.click();
+  a.href = URL.createObjectURL(blob); a.download = "data.js"; a.click();
 }
+
 function downloadJson() {
   const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: "application/json;charset=utf-8" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "dehyari-backup.json";
-  a.click();
+  a.href = URL.createObjectURL(blob); a.download = "dehyari-backup.json"; a.click();
 }
+
 function handleFileUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -442,4 +397,42 @@ function handleFileUpload(e) {
       }
       if (!parsed || !parsed.dehyaris) throw new Error("ساختار نامعتبر");
       if (!confirm("داده‌های فعلی جایگزین شوند؟")) return;
-      DATA =
+      DATA = parsed;
+      if (!DATA.sections) DATA.sections = FALLBACK.sections;
+      persist(); renderSite(); switchTab("sections");
+      alert("✅ فایل با موفقیت بارگذاری شد.");
+    } catch(err) { alert("❌ خطا: " + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+function saveAllAndRefresh() {
+  persist(); renderSite();
+  const cur = document.getElementById("dehyariSelect").value;
+  if (cur) showDehyari(cur);
+  closeAdmin(); alert("✅ ذخیره شد.");
+}
+
+// 🔐 سیستم مخفی ۶ بار کلیک
+let clickCount = 0;
+let clickTimer = null;
+
+window.handleHeaderClick = function() {
+  clickCount++;
+  clearTimeout(clickTimer);
+  clickTimer = setTimeout(function() { clickCount = 0; }, 1500);
+  
+  if (clickCount >= 6) {
+    clickCount = 0;
+    clearTimeout(clickTimer);
+    openAdmin();
+  }
+};
+
+loadInitialData();
+renderSite();
+showDehyari("");
+document.getElementById("adminModal").addEventListener("click", function(e) {
+  if (e.target === this) closeAdmin();
+});
