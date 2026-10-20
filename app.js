@@ -5,7 +5,7 @@ const FALLBACK = {
 };
 let DATA = null, editingDehyariIndex = null;
 
-// 🔐 تنظیمات رمز عبور ورود به سایت (برای تغییر، عدد 1234 را عوض کنید)
+// 🔐 رمز عبور ورود به سایت
 const SITE_PASSWORD = "1234";
 
 window.checkSitePassword = function() {
@@ -161,7 +161,16 @@ function renderFieldsForSection(secKey) {
       if (isImg) {
         html += `<div style="background:white; padding:10px; border-radius:6px; border:1px solid #b3e5fc;">`;
         if (v.img) html += `<img src="${v.img}" style="max-width:100%; max-height:150px; border-radius:6px; margin-bottom:8px; display:block;">`;
-        html += `<label style="font-size:0.8rem; color:#0277bd;">آپلود عکس:</label><input type="file" accept="image/*" onchange="uploadImage(event, '${secKey}', ${idx})" style="font-size:0.8rem; margin-bottom:8px; display:block;"><label style="font-size:0.8rem; color:#0277bd;">توضیحات زیر عکس:</label><textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea></div>`;
+        
+        // بخش آپلود عکس با انتخاب اندازه
+        html += `<label style="font-size:0.8rem; color:#0277bd;">آپلود عکس:</label>`;
+        html += `<select id="size_${secKey}_${idx}" style="width:100%; margin-bottom:8px; padding:6px; border-radius:6px; border:1px solid #b3e5fc; font-family:inherit; font-size:0.8rem;">
+          <option value="personnel">عکس پرسنلی (مربع)</option>
+          <option value="custom">اندازه دلخواه</option>
+        </select>`;
+        html += `<input type="file" accept="image/*" onchange="uploadImage(event, '${secKey}', ${idx})" style="font-size:0.8rem; margin-bottom:8px; display:block;">`;
+        
+        html += `<label style="font-size:0.8rem; color:#0277bd;">توضیحات زیر عکس:</label><textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea></div>`;
       } else {
         html += `<div class="field-val">`;
         if (String(v).length > 60) html += `<textarea onchange="updateFieldValue('${secKey}', ${idx}, this.value)">${escapeHtml(v)}</textarea>`;
@@ -199,15 +208,35 @@ window.updateFieldValue = function(secKey, idx, val) { const d = DATA.dehyaris[e
 window.updateImgText = function(secKey, idx, val) { const d = DATA.dehyaris[editingDehyariIndex]; const keys = Object.keys(d.fields[secKey]); if (keys[idx]) { d.fields[secKey][keys[idx]].text = val; persist(); } };
 
 window.uploadImage = function(event, secKey, idx) {
-  const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+  const file = event.target.files[0]; if (!file) return;
+  
+  // خواندن نوع اندازه از منوی کشویی
+  const sizeSelect = document.getElementById("size_" + secKey + "_" + idx);
+  const sizeType = sizeSelect ? sizeSelect.value : "personnel";
+
+  let targetWidth = 300;
+  let targetHeight = 300;
+
+  if (sizeType === "custom") {
+    const w = prompt("عرض دلخواه را به پیکسل وارد کنید (مثلاً 800):", "600");
+    const h = prompt("ارتفاع دلخواه را به پیکسل وارد کنید (مثلاً 400):", "400");
+    if (!w || !h || isNaN(w) || isNaN(h)) { alert("مقادیر معتبر نیستند."); return; }
+    targetWidth = parseInt(w);
+    targetHeight = parseInt(h);
+  }
+
+  const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
-      const canvas = document.createElement("canvas"); const MAX_SIZE = 600; let width = img.width, height = img.height;
-      if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
-      else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-      canvas.width = width; canvas.height = height; const ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.7); const d = DATA.dehyaris[editingDehyariIndex]; const keys = Object.keys(d.fields[secKey]);
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+      
+      const d = DATA.dehyaris[editingDehyariIndex]; const keys = Object.keys(d.fields[secKey]);
       if (keys[idx]) { d.fields[secKey][keys[idx]].img = dataUrl; persist(); renderFieldsForSection(secKey); }
     };
     img.src = e.target.result;
