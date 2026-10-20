@@ -8,16 +8,7 @@ const FALLBACK = {
     { key: "jamiyat", label: "👥 جمعیت" },
     { key: "tarh", label: "📋 طرح‌های اجرا شده" }
   ],
-  dehyaris: [
-    {
-      name: "دهیاری روستای قره‌تپه",
-      fields: {
-        dehyar: { "نام": "علی محمدی", "تلفن": "0912..." },
-        roosta: { "روستا": "قره‌تپه" },
-        mashin: {}, jamiyat: {}, tarh: {}
-      }
-    }
-  ]
+  dehyaris: [{ name: "دهیاری روستای قره‌تپه", fields: { dehyar: { "نام": "علی محمدی", "تلفن": "0912..." }, roosta: { "روستا": "قره‌تپه" }, mashin: {}, jamiyat: {}, tarh: {} } }]
 };
 
 let DATA = null, editingDehyariIndex = null;
@@ -56,6 +47,7 @@ function populateSelect() {
   if (cur) sel.value = cur;
 }
 
+// نمایش دهیاری با منوهای افقی
 function showDehyari(id) {
   const box = document.getElementById("content");
   if (id === "" || id === null) {
@@ -64,31 +56,49 @@ function showDehyari(id) {
   }
   const d = DATA.dehyaris[Number(id)];
   if (!d) return;
-  let html = `<div class="card"><div class="card-header">${escapeHtml(d.name)}</div>`;
-  DATA.sections.forEach(sec => {
-    const fields = (d.fields && d.fields[sec.key]) || {};
-    let inner = "";
-    if (Object.keys(fields).length === 0) inner = "<p>اطلاعاتی ثبت نشده است.</p>";
-    else {
-      Object.entries(fields).forEach(([k, v]) => {
-        if (v && typeof v === 'object' && v.type === 'image') {
-          inner += `<div class="info-row" style="flex-direction:column; align-items:flex-start;"><span class="label">${escapeHtml(k)}:</span>`;
-          if (v.img) inner += `<img src="${v.img}" style="max-width:100%; border-radius:8px; margin:8px 0; max-height:300px; object-fit:contain;">`;
-          if (v.text) inner += `<span style="color:#264a6e; margin-top:5px;">${escapeHtml(v.text)}</span>`;
-          inner += `</div>`;
-        } else {
-          inner += `<div class="info-row"><span class="label">${escapeHtml(k)}:</span><span>${escapeHtml(v || "-")}</span></div>`;
-        }
-      });
-    }
-    html += `<div class="accordion-item"><button class="accordion-btn" onclick="toggleAcc(this)"><span>${escapeHtml(sec.label)}</span><span class="arrow">▼</span></button><div class="accordion-content"><div class="accordion-content-inner">${inner}</div></div></div>`;
+
+  let html = `<div class="card"><div class="card-header">${escapeHtml(d.name)}</div><div class="tabs-container">`;
+  DATA.sections.forEach((sec, index) => {
+    const activeClass = index === 0 ? "active" : "";
+    html += `<button class="main-tab-btn ${activeClass}" onclick="switchMainTab(this, '${sec.key}')">${escapeHtml(sec.label)}</button>`;
   });
-  box.innerHTML = html + "</div>";
-  const first = box.querySelector(".accordion-btn");
-  if (first) toggleAcc(first);
+  html += `</div><div class="tab-content-area" id="main-tab-content"></div></div>`;
+  box.innerHTML = html;
+
+  if (DATA.sections.length > 0) renderTabContent(d, DATA.sections[0].key);
 }
 
-function toggleAcc(btn) { btn.classList.toggle("open"); btn.nextElementSibling.classList.toggle("open"); }
+window.switchMainTab = function(btn, secKey) {
+  document.querySelectorAll(".main-tab-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const id = document.getElementById("dehyariSelect").value;
+  if (id !== "") {
+    const d = DATA.dehyaris[Number(id)];
+    renderTabContent(d, secKey);
+  }
+};
+
+function renderTabContent(d, secKey) {
+  const contentArea = document.getElementById("main-tab-content");
+  if (!contentArea) return;
+  const fields = (d.fields && d.fields[secKey]) || {};
+  let inner = "";
+  if (Object.keys(fields).length === 0) {
+    inner = "<p style='color:#6ba3c9; text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>";
+  } else {
+    Object.entries(fields).forEach(([k, v]) => {
+      if (v && typeof v === 'object' && v.type === 'image') {
+        inner += `<div class="info-row" style="flex-direction:column; align-items:flex-start;"><span class="label">${escapeHtml(k)}:</span>`;
+        if (v.img) inner += `<img src="${v.img}" style="max-width:100%; border-radius:8px; margin:8px 0; max-height:300px; object-fit:contain;">`;
+        if (v.text) inner += `<span style="color:#264a6e; margin-top:5px;">${escapeHtml(v.text)}</span>`;
+        inner += `</div>`;
+      } else {
+        inner += `<div class="info-row"><span class="label">${escapeHtml(k)}:</span><span>${escapeHtml(v || "-")}</span></div>`;
+      }
+    });
+  }
+  contentArea.innerHTML = inner;
+}
 
 async function hashPassword(pass) {
   const enc = new TextEncoder().encode(pass + "|salt");
@@ -111,9 +121,9 @@ function openAdmin() {
   document.getElementById("loginLabel").textContent = hasHash ? "رمز عبور ادمین:" : "تعیین رمز جدید:";
   document.getElementById("loginBtn").textContent = hasHash ? "ورود" : "تعیین رمز و ورود";
 }
-function closeAdmin() { document.getElementById("adminModal").classList.remove("active"); }
+window.closeAdmin = function() { document.getElementById("adminModal").classList.remove("active"); };
 
-async function checkPassword() {
+window.checkPassword = async function() {
   const pass = document.getElementById("adminPassword").value;
   if (!pass) { alert("رمز را وارد کنید."); return; }
   if (!getStoredHash()) {
@@ -127,7 +137,7 @@ async function checkPassword() {
     if (await verifyPassword(pass)) enterAdminPanel();
     else alert("❌ رمز عبور اشتباه است.");
   }
-}
+};
 
 function enterAdminPanel() {
   document.getElementById("loginScreen").style.display = "none";
@@ -135,15 +145,15 @@ function enterAdminPanel() {
   switchTab("sections");
 }
 
-function emergencyReset() {
+window.emergencyReset = function() {
   if (!confirm("⚠️ همه داده‌ها و رمز پاک می‌شود. ادامه؟")) return;
   if (!confirm("مطمئنید؟")) return;
   localStorage.removeItem("dehyari_admin_hash_v7");
   localStorage.removeItem("dehyari_panel_v7");
   alert("✅ ریست شد."); location.reload();
-}
+};
 
-function switchTab(tab) {
+window.switchTab = function(tab) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   if (event && event.target) event.target.classList.add("active");
   ["sections", "dehyaris", "settings", "security", "backup"].forEach(t => {
@@ -154,7 +164,7 @@ function switchTab(tab) {
   if (tab === "settings") renderSettingsTab();
   if (tab === "security") renderSecurityTab();
   if (tab === "backup") renderBackupTab();
-}
+};
 
 function renderSectionsTab() {
   const box = document.getElementById("tab-sections");
@@ -172,30 +182,30 @@ function countFieldsInSection(key) {
   DATA.dehyaris.forEach(d => { const n = Object.keys((d.fields && d.fields[key]) || {}).length; if (n > max) max = n; });
   return max;
 }
-
-function addSection() {
+window.addSection = function() {
   const key = "section_" + Date.now();
   const label = prompt("نام منوی جدید:", "بخش جدید");
   if (!label) return;
   DATA.sections.push({ key, label });
   DATA.dehyaris.forEach(d => { d.fields[key] = {}; });
   persist(); renderSectionsTab(); populateSelect();
-}
+};
 
-function editSection(i) {
+window.editSection = function(i) {
   const sec = DATA.sections[i];
   const nl = prompt("نام جدید بخش:", sec.label);
   if (!nl) return;
   sec.label = nl; persist(); renderSectionsTab(); populateSelect();
-}
+};
 
-function deleteSection(i) {
+window.deleteSection = function(i) {
   if (!confirm("این بخش و همه فیلدهایش حذف شود؟")) return;
   const key = DATA.sections[i].key;
   DATA.sections.splice(i, 1);
   DATA.dehyaris.forEach(d => { delete d.fields[key]; });
   persist(); renderSectionsTab();
-}
+};
+
 function renderDehyarisTab() {
   const box = document.getElementById("tab-dehyaris");
   if (editingDehyariIndex === null) {
@@ -214,8 +224,7 @@ function renderDehyarisTab() {
   html += `<div class="form-group" style="margin-top:12px;"><label>نام دهیاری:</label><input type="text" value="${escapeHtml(d.name)}" onchange="updateDehyariName(this.value)"></div>`;
   DATA.sections.forEach(sec => {
     if (!d.fields[sec.key]) d.fields[sec.key] = {};
-    html += `<div class="section-title">${escapeHtml(sec.label)}</div><div id="fields-${sec.key}"></div>`;
-    html += `<button class="add-field-btn" onclick="addFieldToSection('${sec.key}')">➕ افزودن فیلد</button>`;
+    html += `<div class="section-title">${escapeHtml(sec.label)}</div><div id="fields-${sec.key}"></div><button class="add-field-btn" onclick="addFieldToSection('${sec.key}')">➕ افزودن فیلد</button>`;
   });
   box.innerHTML = html;
   DATA.sections.forEach(sec => renderFieldsForSection(sec.key));
@@ -248,7 +257,7 @@ function renderFieldsForSection(secKey) {
   container.innerHTML = html;
 }
 
-function addDehyari() {
+window.addDehyari = function() {
   const name = prompt("نام دهیاری جدید:", "دهیاری ...");
   if (!name) return;
   const newD = { name, fields: {} };
@@ -256,19 +265,19 @@ function addDehyari() {
   DATA.dehyaris.push(newD); persist();
   editingDehyariIndex = DATA.dehyaris.length - 1;
   renderDehyarisTab(); populateSelect();
-}
+};
 
-function editDehyari(i) { editingDehyariIndex = i; renderDehyarisTab(); }
+window.editDehyari = function(i) { editingDehyariIndex = i; renderDehyarisTab(); };
 
-function deleteDehyari(i) {
+window.deleteDehyari = function(i) {
   if (!confirm(`«${DATA.dehyaris[i].name}» حذف شود؟`)) return;
   DATA.dehyaris.splice(i, 1); persist(); renderDehyarisTab(); populateSelect();
   showDehyari(document.getElementById("dehyariSelect").value);
-}
+};
 
-function updateDehyariName(val) { DATA.dehyaris[editingDehyariIndex].name = val; persist(); populateSelect(); }
+window.updateDehyariName = function(val) { DATA.dehyaris[editingDehyariIndex].name = val; persist(); populateSelect(); };
 
-function addFieldToSection(secKey) {
+window.addFieldToSection = function(secKey) {
   const type = confirm("آیا این فیلد باید «عکس + توضیحات» باشد؟\n\n(برای فیلد متنی معمولی، دکمه Cancel را بزنید)");
   const key = prompt("نام فیلد جدید:", "فیلد جدید");
   if (!key) return;
@@ -278,9 +287,9 @@ function addFieldToSection(secKey) {
   if (type) d.fields[secKey][key] = { type: "image", img: "", text: "" };
   else d.fields[secKey][key] = "";
   persist(); renderFieldsForSection(secKey);
-}
+};
 
-function renameField(secKey, idx, newKey) {
+window.renameField = function(secKey, idx, newKey) {
   const d = DATA.dehyaris[editingDehyariIndex];
   const entries = Object.entries(d.fields[secKey]);
   if (!entries[idx]) return;
@@ -289,21 +298,21 @@ function renameField(secKey, idx, newKey) {
   const nf = {};
   Object.entries(d.fields[secKey]).forEach(([k, v]) => { if (k === oldKey) nf[newKey] = v; else nf[k] = v; });
   d.fields[secKey] = nf; persist(); renderFieldsForSection(secKey);
-}
+};
 
-function updateFieldValue(secKey, idx, val) {
+window.updateFieldValue = function(secKey, idx, val) {
   const d = DATA.dehyaris[editingDehyariIndex];
   const keys = Object.keys(d.fields[secKey]);
   if (keys[idx]) { d.fields[secKey][keys[idx]] = val; persist(); }
-}
+};
 
-function updateImgText(secKey, idx, val) {
+window.updateImgText = function(secKey, idx, val) {
   const d = DATA.dehyaris[editingDehyariIndex];
   const keys = Object.keys(d.fields[secKey]);
   if (keys[idx]) { d.fields[secKey][keys[idx]].text = val; persist(); }
-}
+};
 
-function uploadImage(event, secKey, idx) {
+window.uploadImage = function(event, secKey, idx) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -326,34 +335,34 @@ function uploadImage(event, secKey, idx) {
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
-}
+};
 
-function deleteField(secKey, idx) {
+window.deleteField = function(secKey, idx) {
   const d = DATA.dehyaris[editingDehyariIndex];
   const keys = Object.keys(d.fields[secKey]);
   if (!keys[idx]) return;
   if (!confirm(`فیلد «${keys[idx]}» حذف شود؟`)) return;
   delete d.fields[secKey][keys[idx]];
   persist(); renderFieldsForSection(secKey);
-}
+};
 
 function renderSettingsTab() {
   const box = document.getElementById("tab-settings");
   box.innerHTML = `<div class="hint">⚙️ تنظیمات کلی.</div><div class="form-group"><label>عنوان اصلی:</label><input type="text" id="setting-title" value="${escapeHtml(DATA.siteTitle || "")}"></div><div class="form-group"><label>زیرعنوان:</label><input type="text" id="setting-sub" value="${escapeHtml(DATA.siteSub || "")}"></div><button class="btn btn-success" style="width:100%;" onclick="saveSettings()">💾 ذخیره</button>`;
 }
 
-function saveSettings() {
+window.saveSettings = function() {
   DATA.siteTitle = document.getElementById("setting-title").value.trim() || "دهیاری‌ها";
   DATA.siteSub = document.getElementById("setting-sub").value.trim();
   persist(); renderSite(); alert("✅ ذخیره شد.");
-}
+};
 
 function renderSecurityTab() {
   const box = document.getElementById("tab-security");
   box.innerHTML = `<div class="hint">🔐 مدیریت رمز ادمین.</div><div class="form-group"><label>رمز فعلی:</label><input type="password" id="sec-old-pass"></div><div class="form-group"><label>رمز جدید:</label><input type="password" id="sec-new-pass"></div><div class="form-group"><label>تکرار رمز جدید:</label><input type="password" id="sec-new-pass2"></div><button class="btn btn-warning" style="width:100%;" onclick="changePassword()">🔄 تغییر رمز</button><div class="section-title" style="color:#c62828; margin-top:25px;">⚠️ منطقه خطر</div><button class="btn btn-danger" style="width:100%;" onclick="emergencyReset()">🆘 ریست کامل</button>`;
 }
 
-async function changePassword() {
+window.changePassword = async function() {
   const oldPass = document.getElementById("sec-old-pass").value;
   const newPass = document.getElementById("sec-new-pass").value;
   const newPass2 = document.getElementById("sec-new-pass2").value;
@@ -362,27 +371,27 @@ async function changePassword() {
   if (newPass !== newPass2) { alert("یکسان نیستند."); return; }
   setStoredHash(await hashPassword(newPass));
   alert("✅ تغییر کرد.");
-}
+};
 
 function renderBackupTab() {
   const box = document.getElementById("tab-backup");
   box.innerHTML = `<div class="hint">💾 برای اعمال دائمی تغییرات برای همه کاربران، فایل data.js را دانلود کرده و در گیت‌هاب آپلود کنید.</div><div class="section-title">📤 خروجی</div><button class="btn btn-success" style="width:100%; margin-bottom:10px;" onclick="downloadDataJs()">⬇️ دانلود فایل data.js</button><button class="btn btn-primary" style="width:100%; margin-bottom:20px;" onclick="downloadJson()">⬇️ دانلود فایل JSON (پشتیبان)</button><div class="section-title">📥 ورودی</div><input type="file" id="uploadFile" accept=".js,.json" style="display:none" onchange="handleFileUpload(event)"><button class="btn btn-warning" style="width:100%;" onclick="document.getElementById('uploadFile').click()">📂 بارگذاری فایل پشتیبان</button>`;
 }
 
-function downloadDataJs() {
+window.downloadDataJs = function() {
   const jsContent = "const INITIAL_DATA = " + JSON.stringify(DATA, null, 2) + ";\n";
   const blob = new Blob([jsContent], { type: "text/javascript;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = "data.js"; a.click();
-}
+};
 
-function downloadJson() {
+window.downloadJson = function() {
   const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: "application/json;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = "dehyari-backup.json"; a.click();
-}
+};
 
-function handleFileUpload(e) {
+window.handleFileUpload = function(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -405,16 +414,15 @@ function handleFileUpload(e) {
   };
   reader.readAsText(file);
   e.target.value = "";
-}
+};
 
-function saveAllAndRefresh() {
+window.saveAllAndRefresh = function() {
   persist(); renderSite();
   const cur = document.getElementById("dehyariSelect").value;
   if (cur) showDehyari(cur);
   closeAdmin(); alert("✅ ذخیره شد.");
-}
+};
 
-// 🔐 سیستم مخفی ۶ بار کلیک
 let clickCount = 0;
 let clickTimer = null;
 
@@ -422,7 +430,6 @@ window.handleHeaderClick = function() {
   clickCount++;
   clearTimeout(clickTimer);
   clickTimer = setTimeout(function() { clickCount = 0; }, 1500);
-  
   if (clickCount >= 6) {
     clickCount = 0;
     clearTimeout(clickTimer);
