@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دهیاری‌های بخش مرکزی سقز</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Tahoma, sans-serif; }
+  body { background: #f0f8ff; color: #1a3a5c; min-height: 100vh; }
+
+  /* هدر */
+  header {
+    background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 1.6rem; }
+  header .sub { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+
+  /* دکمه ادمین */
+  .admin-btn {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+  }
+  .admin-btn:hover { background: rgba(255,255,255,0.35); }
+
+  /* منوی کشویی دهیاری‌ها */
+  .select-wrapper {
+    max-width: 500px;
+    margin: 25px auto 10px;
+    padding: 0 15px;
+  }
+  .select-wrapper label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #0277bd;
+  }
+  select {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid #4fc3f7;
+    border-radius: 10px;
+    background: white;
+    color: #1a3a5c;
+    cursor: pointer;
+    outline: none;
+    transition: border 0.2s;
+  }
+  select:focus { border-color: #0288d1; }
+
+  /* محتوای دهیاری */
+  #content {
+    max-width: 800px;
+    margin: 20px auto 40px;
+    padding: 0 15px;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(2, 136, 209, 0.12);
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card-header {
+    background: #4fc3f7;
+    color: white;
+    padding: 15px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  .accordion-item { border-bottom: 1px solid #e1f5fe; }
+  .accordion-item:last-child { border-bottom: none; }
+  .accordion-btn {
+    width: 100%;
+    background: white;
+    border: none;
+    padding: 15px 20px;
+    text-align: right;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #0277bd;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+  }
+  .accordion-btn:hover { background: #e1f5fe; }
+  .accordion-btn .arrow {
+    transition: transform 0.3s;
+    font-size: 0.8rem;
+  }
+  .accordion-btn.open .arrow { transform: rotate(180deg); }
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    background: #f8fdff;
+  }
+  .accordion-content.open { max-height: 600px; }
+  .accordion-content-inner {
+    padding: 15px 20px;
+    line-height: 2;
+    color: #264a6e;
+    font-size: 0.95rem;
+  }
+  .info-row {
+    display: flex;
+    padding: 6px 0;
+    border-bottom: 1px dashed #cce9f7;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label {
+    font-weight: bold;
+    color: #0277bd;
+    min-width: 150px;
+  }
+  .empty-msg {
+    text-align: center;
+    padding: 50px 20px;
+    color: #6ba3c9;
+    font-size: 1.05rem;
+  }
+
+  /* ادمین پنل */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal h2 {
+    color: #0277bd;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  .modal .warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+  }
+  .modal label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #0277bd;
+    font-size: 0.9rem;
+  }
+  .modal input, .modal textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px solid #b3e5fc;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .modal input:focus, .modal textarea:focus { border-color: #29b6f6; }
+  .modal textarea { resize: vertical; min-height: 70px; }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .modal-actions button:hover { opacity: 0.85; }
+  .btn-save { background: #29b6f6; color: white; }
+  .btn-cancel { background: #e0e0e0; color: #333; }
+
+  .admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .admin-tabs button {
+    padding: 8px 14px;
+    border: 1.5px solid #4fc3f7;
+    background: white;
+    color: #0277bd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .admin-tabs button.active {
+    background: #4fc3f7;
+    color: white;
+  }
+
+  @media (max-width: 500px) {
+    header h1 { font-size: 1.15rem; }
+    .admin-btn { padding: 6px 10px; font-size: 0.75rem; }
+    .info-row { flex-direction: column; }
+    .info-row .label { min-width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>دهیاری‌های بخش مرکزی سقز</h1>
+  <div class="sub">سامانه اطلاعات دهیاری‌ها</div>
+  <button class="admin-btn" onclick="openAdmin()">🔐 ادمین</button>
+</header>
+
+<div class="select-wrapper">
+  <label for="dehyariSelect">📋 انتخاب دهیاری:</label>
+  <select id="dehyariSelect" onchange="showDehyari(this.value)">
+    <option value="">-- یک دهیاری را انتخاب کنید --</option>
+  </select>
+</div>
+
+<div id="content">
+  <div class="empty-msg">برای مشاهده اطلاعات، از منوی بالا یک دهیاری انتخاب کنید.</div>
+</div>
+
+<!-- مودال ادمین -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <h2>🔐 پنل مدیریت</h2>
+    <div class="warning">
+      ⚠️ توجه: در نسخه GitHub Pages تغییرات فقط در مرورگر شما ذخیره می‌شود (localStorage). برای ذخیره دائمی باید فایل داده‌ها را ویرایش کنید.
+    </div>
+
+    <label for="adminPassword">رمز عبور ادمین:</label>
+    <input type="password" id="adminPassword" placeholder="رمز را وارد کنید">
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAdmin()">انصراف</button>
+      <button class="btn-save" onclick="checkPassword()">ورود</button>
+    </div>
+
+    <!-- بخش ویرایش (پس از ورود) -->
+    <div id="adminEditor" style="display:none;">
+      <hr style="margin:20px 0;">
+      <label>انتخاب دهیاری برای ویرایش:</label>
+      <select id="editSelect" onchange="loadForEdit(this.value)">
+        <option value="">-- انتخاب کنید --</option>
+      </select>
+      <div id="editForm"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   داده‌های اولیه دهیاری‌ها
+   برای ویرایش دائمی، این آرایه را تغییر دهید و در گیت‌هاب قرار دهید
+   ============================================================ */
+const DEFAULT_DATA = [
+  {
+    id: "dehyari1",
+    name: "دهیاری روستای قره‌تپه",
+    dehyar: {
+      "نام و نام خانوادگی": "علی محمدی",
+      "شماره تماس": "09123456789",
+      "کد ملی": "1234567890",
+      "تاریخ انتصاب": "1400/01/15"
+    },
+    roosta: {
+      "نام روستا": "قره‌تپه",
+      "بخش": "مرکزی",
+      "دهستان": "ترجان",
+      "فاصله تا سقز": "12 کیلومتر",
+      "تعداد خانوار": "85"
+    },
+    mashin: {
+      "گریدر": "1 دستگاه",
+      "لودر": "1 دستگاه",
+      "کامیون": "2 دستگاه",
+      "خودروی سواری": "1 دستگاه (پیکاپ)"
+    },
+    jamiyat: {
+      "جمعیت کل": "420 نفر",
+      "مرد": "215 نفر",
+      "زن": "205 نفر",
+      "تعداد دانش‌آموز": "68 نفر"
+    },
+    tarh: {
+      "طرح‌های اجرا شده": "آسفالت‌ریزی معابر (1401)، جدول‌گذاری خیابان اصلی (1402)، احداث پارک کودک (1402)، بازسازی مسجد (1403)"
+    }
+  },
+  {
+    id: "dehyari2",
+    name: "دهیاری روستای کانی‌کوان",
+    dehyar: {
+      "نام و نام خانوادگی": "حسن کریمی",
+      "شماره تماس": "09187654321",
+      "کد ملی": "0987654321",
+      "تاریخ انتصاب": "1399/06/10"
+    },
+    roosta: {
+      "نام روستا": "کانی‌کوان",
+      "بخش": "مرکزی",
+      "دهستان": "سرا",
+      "فاصله تا سقز": "8 کیلومتر",
+      "تعداد خانوار": "120"
+    },
+    mashin: {
+      "گریدر": "1 دستگاه",
+      "لودر": "2 دستگاه",
+      "کامیون": "1 دستگاه",
+      "خودروی سواری": "2 دستگاه"
+    },
+    jamiyat: {
+      "جمعیت کل": "650 نفر",
+      "مرد": "330 نفر",
+      "زن": "320 نفر",
+      "تعداد دانش‌آموز": "110 نفر"
+    },
+    tarh: {
+      "طرح‌های اجرا شده": "روشنایی معابر (1400)، آسفالت کوچه‌ها (1401)، احداث سالن ورزشی (1402)، طرح هادی (1403)"
+    }
+  },
+  {
+    id: "dehyari3",
+    name: "دهیاری روستای شوی",
+    dehyar: {
+      "نام و نام خانوادگی": "محمد رحیمی",
+      "شماره تماس": "09141234567",
+      "کد ملی": "1122334455",
+      "تاریخ انتصاب": "1401/03/20"
+    },
+    roosta: {
+      "نام روستا": "شوی",
+      "بخش": "مرکزی",
+      "دهستان": "ترجان",
+      "فاصله تا سقز": "18 کیلومتر",
+      "تعداد خانوار": "60"
+    },
+    mashin: {
+      "گریدر": "1 دستگاه",
+      "لودر": "0",
+      "کامیون": "1 دستگاه",
+      "خودروی سواری": "1 دستگاه"
+    },
+    jamiyat: {
+      "جمعیت کل": "310 نفر",
+      "مرد": "160 نفر",
+      "زن": "150 نفر",
+      "تعداد دانش‌آموز": "45 نفر"
+    },
+    tarh: {
+      "طرح‌های اجرا شده": "بازسازی جاده روستایی (1401)، احداث بوستان (1402)، جدول‌گذاری (1403)"
+    }
+  }
+];
+
+/* ============================================================
+   بارگذاری داده‌ها (از localStorage یا پیش‌فرض)
+   ============================================================ */
+let dehyaris = [];
+
+function loadData() {
+  const stored = localStorage.getItem("dehyari_data_v1");
+  if (stored) {
+    try {
+      dehyaris = JSON.parse(stored);
+    } catch (e) {
+      dehyaris = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+  } else {
+    dehyaris = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
+
+function saveData() {
+  localStorage.setItem("dehyari_data_v1", JSON.stringify(dehyaris));
+}
+
+/* ============================================================
+   پر کردن منوی کشویی
+   ============================================================ */
+function populateSelect() {
+  const sel = document.getElementById("dehyariSelect");
+  const editSel = document.getElementById("editSelect");
+  const currentVal = sel.value;
+
+  sel.innerHTML = '<option value="">-- یک دهیاری را انتخاب کنید --</option>';
+  editSel.innerHTML = '<option value="">-- انتخاب کنید --</option>';
+
+  dehyaris.forEach(d => {
+    const opt1 = document.createElement("option");
+    opt1.value = d.id;
+    opt1.textContent = d.name;
+    sel.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = d.id;
+    opt2.textContent = d.name;
+    editSel.appendChild(opt2);
+  });
+
+  if (currentVal) sel.value = currentVal;
+}
+
+/* ============================================================
+   نمایش اطلاعات دهیاری انتخاب شده
+   ============================================================ */
+const SECTIONS = [
+  { key: "dehyar", label: "👤 مشخصات دهیار" },
+  { key: "roosta", label: "🏘️ مشخصات روستا" },
+  { key: "mashin", label: "🚜 ماشین آلات" },
+  { key: "jamiyat", label: "👥 جمعیت" },
+  { key: "tarh", label: "📋 طرح‌های اجرا شده" }
+];
+
+function showDehyari(id) {
+  const content = document.getElementById("content");
+  if (!id) {
+    content.innerHTML = '<div class="empty-msg">برای مشاهده اطلاعات، از منوی بالا یک دهیاری انتخاب کنید.</div>';
+    return;
+  }
+  const d = dehyaris.find(x => x.id === id);
+  if (!d) return;
+
+  let html = `<div class="card">
+    <div class="card-header">${d.name}</div>`;
+
+  SECTIONS.forEach(sec => {
+    const data = d[sec.key] || {};
+    let inner = "";
+    if (Object.keys(data).length === 0) {
+      inner = "<p>اطلاعاتی ثبت نشده است.</p>";
+    } else {
+      Object.entries(data).forEach(([k, v]) => {
+        inner += `<div class="info-row"><span class="label">${k}:</span><span>${v || "-"}</span></div>`;
+      });
+    }
+    html += `
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggleAccordion(this)">
+          <span>${sec.label}</span>
+          <span class="arrow">▼</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-content-inner">${inner}</div>
+        </div>
+      </div>`;
+  });
+
+  html += "</div>";
+  content.innerHTML = html;
+
+  // باز کردن اولین بخش به صورت پیش‌فرض
+  const firstBtn = content.querySelector(".accordion-btn");
+  if (firstBtn) toggleAccordion(firstBtn);
+}
+
+function toggleAccordion(btn) {
+  const content = btn.nextElementSibling;
+  btn.classList.toggle("open");
+  content.classList.toggle("open");
+}
+
+/* ============================================================
+   پنل ادمین
+   ============================================================ */
+// رمز عبور را می‌توانید اینجا تغییر دهید
+const ADMIN_PASSWORD = "admin123";
+
+function openAdmin() {
+  document.getElementById("adminModal").classList.add("active");
+  document.getElementById("adminPassword").value = "";
+  document.getElementById("adminEditor").style.display = "none";
+  document.getElementById("editForm").innerHTML = "";
+}
+
+function closeAdmin() {
+  document.getElementById("adminModal").classList.remove("active");
+}
+
+function checkPassword() {
+  const pass = document.getElementById("adminPassword").value;
+  if (pass === ADMIN_PASSWORD) {
+    document.getElementById("adminEditor").style.display = "block";
+  } else {
+    alert("❌ رمز عبور اشتباه است.");
+  }
+}
+
+function loadForEdit(id) {
+  const form = document.getElementById("editForm");
+  if (!id) { form.innerHTML = ""; return; }
+  const d = dehyaris.find(x => x.id === id);
+  if (!d) return;
+
+  let html = `<label>نام دهیاری:</label>
+    <input type="text" id="edit_name" value="${escapeHtml(d.name)}">`;
+
+  SECTIONS.forEach(sec => {
+    const data = d[sec.key] || {};
+    html += `<h4 style="margin-top:18px;color:#0277bd;">${sec.label}</h4>`;
+    if (sec.key === "tarh") {
+      html += `<label>طرح‌های اجرا شده:</label>
+        <textarea id="edit_${sec.key}_tarh" style="min-height:100px;">${escapeHtml(data["طرح‌های اجرا شده"] || "")}</textarea>`;
+    } else {
+      Object.keys(data).forEach(k => {
+        const fieldId = "edit_" + sec.key + "_" + k.replace(/\s+/g, "_");
+        html += `<label>${k}:</label>
+          <input type="text" id="${fieldId}" value="${escapeHtml(data[k] || "")}">`;
+      });
+    }
+  });
+
+  html += `<div class="modal-actions">
+    <button class="btn-cancel" onclick="closeAdmin()">بستن</button>
+    <button class="btn-save" onclick="saveEdit('${id}')">💾 ذخیره تغییرات</button>
+  </div>`;
+
+  form.innerHTML = html;
+}
+
+function saveEdit(id) {
+  const d = dehyaris.find(x => x.id === id);
+  if (!d) return;
+
+  d.name = document.getElementById("edit_name").value.trim() || d.name;
+
+  SECTIONS.forEach(sec => {
+    if (sec.key === "tarh") {
+      const el = document.getElementById("edit_tarh_tarh");
+      if (el) d.tarh["طرح‌های اجرا شده"] = el.value;
+    } else {
+      Object.keys(d[sec.key]).forEach(k => {
+        const fieldId = "edit_" + sec.key + "_" + k.replace(/\s+/g, "_");
+        const el = document.getElementById(fieldId);
+        if (el) d[sec.key][k] = el.value;
+      });
+    }
+  });
+
+  saveData();
+  populateSelect();
+  // اگر همان دهیاری در حال نمایش بود، دوباره نمایش بده
+  const current = document.getElementById("dehyariSelect").value;
+  if (current === id) showDehyari(id);
+
+  alert("✅ تغییرات با موفقیت ذخیره شد.");
+  closeAdmin();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[s]));
+}
+
+/* ============================================================
+   راه‌اندازی
+   ============================================================ */
+loadData();
+populateSelect();
+
+// بستن مودال با کلیک بیرون
+document.getElementById("adminModal").addEventListener("click", function(e) {
+  if (e.target === this) closeAdmin();
+});
+</script>
+</body>
+</html>
