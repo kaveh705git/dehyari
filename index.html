@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دهیاری‌های بخش مرکزی سقز</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="mainHeader">
+  <h1 id="siteTitle">دهیاری‌های بخش مرکزی سقز</h1>
+  <div class="sub" id="siteSub">سامانه اطلاعات دهیاری‌ها</div>
+</header>
+
+<div class="select-wrapper">
+  <label for="dehyariSelect">📋 انتخاب دهیاری:</label>
+  <select id="dehyariSelect" onchange="showDehyari(this.value)">
+    <option value="">-- یک دهیاری را انتخاب کنید --</option>
+  </select>
+</div>
+
+<div id="content">
+  <div class="empty-msg">برای مشاهده اطلاعات، از منوی بالا یک دهیاری انتخاب کنید.</div>
+</div>
+
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">🔐 ورود ادمین</h2>
+      <button class="close-x" onclick="closeAdmin()">✕</button>
+    </div>
+
+    <div id="loginScreen" class="modal-body">
+      <div id="firstRunBox" class="first-run-box" style="display:none;">
+        <h3>🎉 اولین ورود - تعیین رمز</h3>
+        <p style="font-size:0.85rem; color:#856404;">هیچ رمزی تنظیم نشده است. یک رمز قوی برای ادمین تعیین کنید.</p>
+      </div>
+      <div class="login-box">
+        <label id="loginLabel">رمز عبور ادمین:</label>
+        <input type="password" id="adminPassword" placeholder="رمز را وارد کنید" onkeydown="if(event.key==='Enter')checkPassword()">
+        <div id="confirmPassGroup" style="display:none; margin-top:10px;">
+          <label>تکرار رمز:</label>
+          <input type="password" id="adminPassword2" placeholder="رمز را دوباره وارد کنید">
+        </div>
+        <div style="margin-top:15px; display:flex; gap:8px;">
+          <button class="btn btn-primary" style="flex:1;" onclick="checkPassword()" id="loginBtn">ورود</button>
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeAdmin()">انصراف</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adminPanel" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+      <div class="modal-body" style="flex:1; overflow-y:auto;">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('sections')">📑 بخش‌ها</button>
+          <button class="tab" onclick="switchTab('dehyaris')">🏘️ دهیاری‌ها</button>
+          <button class="tab" onclick="switchTab('settings')">⚙️ تنظیمات</button>
+          <button class="tab" onclick="switchTab('security')">🔐 امنیت</button>
+          <button class="tab" onclick="switchTab('backup')">💾 دریافت data.js</button>
+        </div>
+        <div id="tab-sections"></div>
+        <div id="tab-dehyaris" style="display:none;"></div>
+        <div id="tab-settings" style="display:none;"></div>
+        <div id="tab-security" style="display:none;"></div>
+        <div id="tab-backup" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" onclick="saveAllAndRefresh()">💾 ذخیره و بستن</button>
+        <button class="btn btn-secondary" onclick="closeAdmin()">بستن</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js" onerror="console.log('data.js یافت نشد')"></script>
+<script src="app.js"></script>
+</body>
+</html>
