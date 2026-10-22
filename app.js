@@ -5,10 +5,7 @@ const FALLBACK = {
 };
 let DATA = null, editingDehyariIndex = null;
 
-// 🔐 رمز عبور ورود به سایت
 const SITE_PASSWORD = "1234";
-
-// 🔐 رمز عبور برای دیدن اطلاعات هاشور زده (محرمانه)
 const SECRET_FIELD_PASSWORD = "5555"; 
 
 window.checkSitePassword = function() {
@@ -23,12 +20,45 @@ window.checkSitePassword = function() {
 };
 
 function checkSiteGate() {
-  const isLogged = localStorage.getItem("dehyari_site_logged_in");
-  if (isLogged === "true") {
+  if (localStorage.getItem("dehyari_site_logged_in") === "true") {
     document.getElementById("login-gate").style.display = "none";
     document.getElementById("main-site").style.display = "block";
   }
 }
+
+// 🌙 تغییر تم
+window.toggleTheme = function() {
+  document.body.classList.toggle("dark-mode");
+  const isDark = document.body.classList.contains("dark-mode");
+  localStorage.setItem("dehyari_theme", isDark ? "dark" : "light");
+  document.getElementById("themeToggle").textContent = isDark ? "☀️" : "🌙";
+};
+function loadTheme() {
+  if (localStorage.getItem("dehyari_theme") === "dark") {
+    document.body.classList.add("dark-mode");
+    const btn = document.getElementById("themeToggle");
+    if(btn) btn.textContent = "☀️";
+  }
+}
+
+// 🔍 جستجو
+window.filterDehyari = function() {
+  const search = document.getElementById("searchInput").value.trim();
+  const sel = document.getElementById("dehyariSelect");
+  sel.innerHTML = '<option value="">-- یک دهیاری را انتخاب کنید --</option>';
+  DATA.dehyaris.forEach((d, i) => {
+    if (d.name.includes(search)) {
+      const o = document.createElement("option");
+      o.value = i; o.textContent = d.name;
+      sel.appendChild(o);
+    }
+  });
+};
+
+// 🖨️ چاپ
+window.printDehyari = function() {
+  window.print();
+};
 
 function loadInitialData() {
   if (typeof INITIAL_DATA !== "undefined") { DATA = JSON.parse(JSON.stringify(INITIAL_DATA)); localStorage.setItem("dehyari_panel_v7", JSON.stringify(DATA)); } 
@@ -57,7 +87,7 @@ function showDehyari(id) {
   const box = document.getElementById("content");
   if (id === "" || id === null) { box.innerHTML = '<div class="empty-msg">برای مشاهده اطلاعات، از منوی بالا یک دهیاری انتخاب کنید.</div>'; return; }
   const d = DATA.dehyaris[Number(id)]; if (!d) return;
-  let html = `<div class="card"><div class="card-header">${escapeHtml(d.name)}</div><div class="tabs-container">`;
+  let html = `<div class="card"><div class="card-header"><span>${escapeHtml(d.name)}</span><button class="print-btn" onclick="printDehyari()">🖨️ چاپ</button></div><div class="tabs-container">`;
   DATA.sections.forEach((sec, index) => {
     const activeClass = index === 0 ? "active" : "";
     html += `<button class="main-tab-btn ${activeClass}" onclick="switchMainTab(this, '${sec.key}')">${escapeHtml(sec.label)}</button>`;
@@ -79,7 +109,6 @@ function renderTabContent(d, secKey) {
   const fields = (d.fields && d.fields[secKey]) || {};
   let inner = "";
   
-  // دکمه دانلود کارت شناسایی (فقط در منوی مشخصات دهیار)
   if (secKey === "dehyar") {
     inner += `<div style="text-align: center; margin-bottom: 15px;">
       <button onclick="generateIDCard()" class="btn btn-success" style="padding: 10px 20px; border-radius: 8px;">📥 دانلود کارت شناسایی دهیار</button>
@@ -87,13 +116,13 @@ function renderTabContent(d, secKey) {
   }
 
   if (Object.keys(fields).length === 0) { 
-    inner += "<p style='color:#6ba3c9; text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>"; 
+    inner += "<p style='color:var(--text-muted); text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>"; 
   } else {
     Object.entries(fields).forEach(([k, v]) => {
       if (v && typeof v === 'object' && v.type === 'image') {
         inner += `<div class="info-row" style="flex-direction:column; align-items:flex-start;"><span class="label">${escapeHtml(k)}:</span>`;
         if (v.img) inner += `<img src="${v.img}" style="max-width:100%; border-radius:8px; margin:8px 0; max-height:300px; object-fit:contain;">`;
-        if (v.text) inner += `<span style="color:#264a6e; margin-top:5px;">${escapeHtml(v.text)}</span>`;
+        if (v.text) inner += `<span style="color:var(--text-main); margin-top:5px;">${escapeHtml(v.text)}</span>`;
         inner += `</div>`;
       } else {
         const isSecret = k.includes("ملی") || k.includes("تلفن") || k.includes("رمز");
@@ -113,34 +142,28 @@ function renderTabContent(d, secKey) {
   contentArea.innerHTML = inner;
 }
 
-// 🔐 تابع نمایش اطلاعات محرمانه با وارد کردن رمز
 window.revealSecret = function(secKey, fieldName, realValue) {
   const enteredPass = prompt("برای مشاهده این اطلاعات محرمانه، رمز عبور را وارد کنید:");
   if (enteredPass === null) return;
-  
   if (enteredPass === SECRET_FIELD_PASSWORD) {
     const element = document.getElementById(`secret-${secKey}-${fieldName}`);
     if (element) {
       element.textContent = realValue;
-      element.style.color = "#0277bd";
+      element.style.color = "var(--primary)";
       element.style.cursor = "default";
       element.style.fontWeight = "normal";
       element.style.letterSpacing = "normal";
       element.onclick = null;
     }
-  } else {
-    alert("❌ رمز عبور اشتباه است!");
-  }
+  } else { alert("❌ رمز عبور اشتباه است!"); }
 };
 
-// 🪪 تابع ساخت و دانلود کارت شناسایی
+// 🪪 کارت شناسایی (نسخه رنگی)
 window.generateIDCard = function() {
   const id = document.getElementById("dehyariSelect").value;
   if (id === "") { alert("لطفاً ابتدا یک دهیاری را انتخاب کنید."); return; }
-  
   const d = DATA.dehyaris[Number(id)];
   const dehyarFields = d.fields["dehyar"] || {};
-  
   let name = "-", phone = "-", nationalId = "-", role = "دهیار", imgUrl = "";
   
   Object.entries(dehyarFields).forEach(([k, v]) => {
@@ -152,9 +175,7 @@ window.generateIDCard = function() {
 
   const cardHTML = `
     <div id="printable-card" style="width: 600px; height: 350px; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%); border-radius: 20px; border: 4px solid #4fc3f7; padding: 20px; display: flex; font-family: Tahoma, sans-serif; position: relative; overflow: hidden; direction: rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-      <div style="position: absolute; top: 0; left: 0; right: 0; height: 70px; background: #4fc3f7; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: bold;">
-        کارت شناسایی دهیاری
-      </div>
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 70px; background: #4fc3f7; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: bold;">کارت شناسایی دهیاری</div>
       <div style="margin-top: 80px; width: 150px; height: 150px; border-radius: 15px; border: 4px solid #29b6f6; background: #e1f5fe; overflow: hidden; flex-shrink: 0;">
         ${imgUrl ? `<img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6ba3c9;">بدون عکس</div>`}
       </div>
@@ -173,27 +194,11 @@ window.generateIDCard = function() {
       <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: rgba(79, 195, 247, 0.1); border-radius: 50%;"></div>
     </div>
   `;
-
-  const container = document.createElement("div");
-  container.innerHTML = cardHTML;
-  document.body.appendChild(container);
-
-  if(typeof html2canvas === "undefined") {
-    alert("کتابخانه ساخت کارت لود نشده است. لطفاً اینترنت خود را بررسی کنید.");
-    document.body.removeChild(container);
-    return;
-  }
-
+  const container = document.createElement("div"); container.innerHTML = cardHTML; document.body.appendChild(container);
+  if(typeof html2canvas === "undefined") { alert("کتابخانه ساخت کارت لود نشده است."); document.body.removeChild(container); return; }
   html2canvas(container.firstElementChild, { scale: 2 }).then(canvas => {
-    const link = document.createElement("a");
-    link.download = `کارت_شناسایی_${name}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    document.body.removeChild(container);
-  }).catch(err => {
-    alert("خطا در ساخت کارت: " + err.message);
-    document.body.removeChild(container);
-  });
+    const link = document.createElement("a"); link.download = `کارت_شناسایی_${name}.png`; link.href = canvas.toDataURL("image/png"); link.click(); document.body.removeChild(container);
+  }).catch(err => { alert("خطا در ساخت کارت: " + err.message); document.body.removeChild(container); });
 };
 
 async function hashPassword(pass) { const enc = new TextEncoder().encode(pass + "|salt"); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join(""); }
@@ -227,9 +232,29 @@ window.emergencyReset = function() { if (!confirm("⚠️ همه داده‌ها
 
 window.switchTab = function(tab) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active")); if (event && event.target) event.target.classList.add("active");
-  ["sections", "dehyaris", "settings", "security", "backup"].forEach(t => { document.getElementById("tab-" + t).style.display = (t === tab ? "block" : "none"); });
-  if (tab === "sections") renderSectionsTab(); if (tab === "dehyaris") renderDehyarisTab(); if (tab === "settings") renderSettingsTab(); if (tab === "security") renderSecurityTab(); if (tab === "backup") renderBackupTab();
+  ["sections", "dehyaris", "settings", "security", "backup", "dashboard"].forEach(t => { const el = document.getElementById("tab-" + t); if(el) el.style.display = (t === tab ? "block" : "none"); });
+  if (tab === "sections") renderSectionsTab(); if (tab === "dehyaris") renderDehyarisTab(); if (tab === "settings") renderSettingsTab(); if (tab === "security") renderSecurityTab(); if (tab === "backup") renderBackupTab(); if (tab === "dashboard") renderDashboardTab();
 };
+
+// 📊 داشبورد آماری
+function renderDashboardTab() {
+  const box = document.getElementById("tab-dashboard"); if(!box) return;
+  let totalDehyari = DATA.dehyaris.length;
+  let totalJamiyat = 0;
+  DATA.dehyaris.forEach(d => {
+    const jamiyatFields = d.fields["jamiyat"] || {};
+    Object.entries(jamiyatFields).forEach(([k, v]) => {
+      if (k.includes("کل")) { const num = parseInt(String(v).replace(/\D/g, '')); if (!isNaN(num)) totalJamiyat += num; }
+    });
+  });
+  box.innerHTML = `
+    <div class="hint">📊 آمار کلی سامانه</div>
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-num">${totalDehyari}</span><span class="stat-label">تعداد دهیاری</span></div>
+      <div class="stat-card"><span class="stat-num">${totalJamiyat}</span><span class="stat-label">مجموع جمعیت ثبت شده</span></div>
+    </div>
+  `;
+}
 
 function renderSectionsTab() {
   const box = document.getElementById("tab-sections"); let html = `<div class="hint">📑 منوهای سایت را مدیریت کنید.</div>`;
@@ -264,17 +289,17 @@ function renderFieldsForSection(secKey) {
   else {
     entries.forEach(([k, v], idx) => {
       const isImg = (v && typeof v === 'object' && v.type === 'image');
-      html += `<div class="field-row" style="flex-direction:column; align-items:stretch; background:#f8fdff;"><div style="display:flex; gap:6px; margin-bottom:8px;"><input class="field-key" style="flex:1;" type="text" value="${escapeHtml(k)}" onchange="renameField('${secKey}', ${idx}, this.value)"><button class="icon-btn" onclick="deleteField('${secKey}', ${idx})">✕</button></div>`;
+      html += `<div class="field-row" style="flex-direction:column; align-items:stretch;"><div style="display:flex; gap:6px; margin-bottom:8px;"><input class="field-key" style="flex:1;" type="text" value="${escapeHtml(k)}" onchange="renameField('${secKey}', ${idx}, this.value)"><button class="icon-btn" onclick="deleteField('${secKey}', ${idx})">✕</button></div>`;
       if (isImg) {
-        html += `<div style="background:white; padding:10px; border-radius:6px; border:1px solid #b3e5fc;">`;
+        html += `<div style="background:var(--bg-card); padding:10px; border-radius:6px; border:1px solid var(--border);">`;
         if (v.img) html += `<img src="${v.img}" style="max-width:100%; max-height:150px; border-radius:6px; margin-bottom:8px; display:block;">`;
-        html += `<label style="font-size:0.8rem; color:#0277bd;">آپلود عکس:</label>`;
-        html += `<select id="size_${secKey}_${idx}" style="width:100%; margin-bottom:8px; padding:6px; border-radius:6px; border:1px solid #b3e5fc; font-family:inherit; font-size:0.8rem;">
+        html += `<label style="font-size:0.8rem; color:var(--primary);">آپلود عکس:</label>`;
+        html += `<select id="size_${secKey}_${idx}" style="width:100%; margin-bottom:8px; padding:6px; border-radius:6px; border:1px solid var(--border); font-family:inherit; font-size:0.8rem;">
           <option value="personnel">عکس پرسنلی (مربع)</option>
           <option value="custom">اندازه دلخواه</option>
         </select>`;
         html += `<input type="file" accept="image/*" onchange="uploadImage(event, '${secKey}', ${idx})" style="font-size:0.8rem; margin-bottom:8px; display:block;">`;
-        html += `<label style="font-size:0.8rem; color:#0277bd;">توضیحات زیر عکس:</label><textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea></div>`;
+        html += `<label style="font-size:0.8rem; color:var(--primary);">توضیحات زیر عکس:</label><textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea></div>`;
       } else {
         html += `<div class="field-val">`;
         if (String(v).length > 60) html += `<textarea onchange="updateFieldValue('${secKey}', ${idx}, this.value)">${escapeHtml(v)}</textarea>`;
@@ -313,32 +338,24 @@ window.updateImgText = function(secKey, idx, val) { const d = DATA.dehyaris[edit
 
 window.uploadImage = function(event, secKey, idx) {
   const file = event.target.files[0]; if (!file) return;
-  
   const sizeSelect = document.getElementById("size_" + secKey + "_" + idx);
   const sizeType = sizeSelect ? sizeSelect.value : "personnel";
-
-  let targetWidth = 300;
-  let targetHeight = 300;
-
+  let targetWidth = 300; let targetHeight = 300;
   if (sizeType === "custom") {
     const w = prompt("عرض دلخواه را به پیکسل وارد کنید (مثلاً 800):", "600");
     const h = prompt("ارتفاع دلخواه را به پیکسل وارد کنید (مثلاً 400):", "400");
     if (!w || !h || isNaN(w) || isNaN(h)) { alert("مقادیر معتبر نیستند."); return; }
-    targetWidth = parseInt(w);
-    targetHeight = parseInt(h);
+    targetWidth = parseInt(w); targetHeight = parseInt(h);
   }
-
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
       const canvas = document.createElement("canvas");
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
+      canvas.width = targetWidth; canvas.height = targetHeight;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-      
       const d = DATA.dehyaris[editingDehyariIndex]; const keys = Object.keys(d.fields[secKey]);
       if (keys[idx]) { d.fields[secKey][keys[idx]].img = dataUrl; persist(); renderFieldsForSection(secKey); }
     };
@@ -383,5 +400,5 @@ window.handleHeaderClick = function() {
   if (clickCount >= 6) { clickCount = 0; clearTimeout(clickTimer); openAdmin(); }
 };
 
-loadInitialData(); renderSite(); showDehyari(""); checkSiteGate();
+loadInitialData(); renderSite(); showDehyari(""); checkSiteGate(); loadTheme();
 document.getElementById("adminModal").addEventListener("click", function(e) { if (e.target === this) closeAdmin(); });
