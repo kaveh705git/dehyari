@@ -45,14 +45,28 @@ function loadTheme() {
 window.filterDehyari = function() {
   const search = document.getElementById("searchInput").value.trim();
   const sel = document.getElementById("dehyariSelect");
+  
+  if (!DATA || !DATA.dehyaris) return; // اگر دیتا لود نشده بود، خارج شو
+
   sel.innerHTML = '<option value="">-- یک دهیاری را انتخاب کنید --</option>';
+  
+  let found = false;
   DATA.dehyaris.forEach((d, i) => {
     if (d.name.includes(search)) {
       const o = document.createElement("option");
-      o.value = i; o.textContent = d.name;
+      o.value = i; 
+      o.textContent = d.name;
       sel.appendChild(o);
+      found = true;
     }
   });
+
+  if (!found && search !== "") {
+    const o = document.createElement("option");
+    o.value = ""; 
+    o.textContent = "موردی یافت نشد";
+    sel.appendChild(o);
+  }
 };
 
 // 🖨️ چاپ
