@@ -8,6 +8,9 @@ let DATA = null, editingDehyariIndex = null;
 // 🔐 رمز عبور ورود به سایت
 const SITE_PASSWORD = "1234";
 
+// 🔐 رمز عبور برای دیدن اطلاعات هاشور زده (محرمانه)
+const SECRET_FIELD_PASSWORD = "5555"; 
+
 window.checkSitePassword = function() {
   const inputPass = document.getElementById("sitePassInput").value;
   if (inputPass === SITE_PASSWORD) {
@@ -75,19 +78,55 @@ function renderTabContent(d, secKey) {
   const contentArea = document.getElementById("main-tab-content"); if (!contentArea) return;
   const fields = (d.fields && d.fields[secKey]) || {};
   let inner = "";
-  if (Object.keys(fields).length === 0) { inner = "<p style='color:#6ba3c9; text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>"; }
-  else {
+  
+  if (Object.keys(fields).length === 0) { 
+    inner = "<p style='color:#6ba3c9; text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>"; 
+  } else {
     Object.entries(fields).forEach(([k, v]) => {
       if (v && typeof v === 'object' && v.type === 'image') {
         inner += `<div class="info-row" style="flex-direction:column; align-items:flex-start;"><span class="label">${escapeHtml(k)}:</span>`;
         if (v.img) inner += `<img src="${v.img}" style="max-width:100%; border-radius:8px; margin:8px 0; max-height:300px; object-fit:contain;">`;
         if (v.text) inner += `<span style="color:#264a6e; margin-top:5px;">${escapeHtml(v.text)}</span>`;
         inner += `</div>`;
-      } else { inner += `<div class="info-row"><span class="label">${escapeHtml(k)}:</span><span>${escapeHtml(v || "-")}</span></div>`; }
+      } else {
+        // 🔐 بررسی اینکه آیا این فیلد باید هاشور زده باشد یا نه
+        const isSecret = k.includes("ملی") || k.includes("تلفن") || k.includes("رمز");
+        
+        if (isSecret) {
+          inner += `<div class="info-row">
+            <span class="label">${escapeHtml(k)}:</span>
+            <span id="secret-${secKey}-${k}" style="cursor:pointer; color:#ef5350; font-weight:bold; letter-spacing:2px;" onclick="revealSecret('${secKey}', '${k}', '${escapeHtml(v)}')">
+              ******** (برای دیدن کلیک کنید)
+            </span>
+          </div>`;
+        } else {
+          inner += `<div class="info-row"><span class="label">${escapeHtml(k)}:</span><span>${escapeHtml(v || "-")}</span></div>`;
+        }
+      }
     });
   }
   contentArea.innerHTML = inner;
 }
+
+// 🔐 تابع نمایش اطلاعات محرمانه با وارد کردن رمز
+window.revealSecret = function(secKey, fieldName, realValue) {
+  const enteredPass = prompt("برای مشاهده این اطلاعات محرمانه، رمز عبور را وارد کنید:");
+  if (enteredPass === null) return;
+  
+  if (enteredPass === SECRET_FIELD_PASSWORD) {
+    const element = document.getElementById(`secret-${secKey}-${fieldName}`);
+    if (element) {
+      element.textContent = realValue;
+      element.style.color = "#0277bd";
+      element.style.cursor = "default";
+      element.style.fontWeight = "normal";
+      element.style.letterSpacing = "normal";
+      element.onclick = null;
+    }
+  } else {
+    alert("❌ رمز عبور اشتباه است!");
+  }
+};
 
 async function hashPassword(pass) { const enc = new TextEncoder().encode(pass + "|salt"); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join(""); }
 function getStoredHash() { return localStorage.getItem("dehyari_admin_hash_v7"); }
@@ -161,15 +200,12 @@ function renderFieldsForSection(secKey) {
       if (isImg) {
         html += `<div style="background:white; padding:10px; border-radius:6px; border:1px solid #b3e5fc;">`;
         if (v.img) html += `<img src="${v.img}" style="max-width:100%; max-height:150px; border-radius:6px; margin-bottom:8px; display:block;">`;
-        
-        // بخش آپلود عکس با انتخاب اندازه
         html += `<label style="font-size:0.8rem; color:#0277bd;">آپلود عکس:</label>`;
         html += `<select id="size_${secKey}_${idx}" style="width:100%; margin-bottom:8px; padding:6px; border-radius:6px; border:1px solid #b3e5fc; font-family:inherit; font-size:0.8rem;">
           <option value="personnel">عکس پرسنلی (مربع)</option>
           <option value="custom">اندازه دلخواه</option>
         </select>`;
         html += `<input type="file" accept="image/*" onchange="uploadImage(event, '${secKey}', ${idx})" style="font-size:0.8rem; margin-bottom:8px; display:block;">`;
-        
         html += `<label style="font-size:0.8rem; color:#0277bd;">توضیحات زیر عکس:</label><textarea onchange="updateImgText('${secKey}', ${idx}, this.value)" style="min-height:60px;">${escapeHtml(v.text || "")}</textarea></div>`;
       } else {
         html += `<div class="field-val">`;
@@ -210,7 +246,6 @@ window.updateImgText = function(secKey, idx, val) { const d = DATA.dehyaris[edit
 window.uploadImage = function(event, secKey, idx) {
   const file = event.target.files[0]; if (!file) return;
   
-  // خواندن نوع اندازه از منوی کشویی
   const sizeSelect = document.getElementById("size_" + secKey + "_" + idx);
   const sizeType = sizeSelect ? sizeSelect.value : "personnel";
 
