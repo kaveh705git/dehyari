@@ -4,10 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>دهیاری‌های بخش مرکزی سقز</title>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=1.3">
 </head>
 <body>
 
@@ -24,9 +21,20 @@
 
 <!-- محتوای اصلی سایت (مخفی تا زمان ورود) -->
 <div id="main-site" style="display:none;">
-  <header id="mainHeader" onclick="handleHeaderClick()">
-    <h1 id="siteTitle">دهیاری‌های بخش مرکزی سقز</h1>
-    <div class="sub" id="siteSub">سامانه اطلاعات دهیاری‌ها</div>
+  <header id="mainHeader">
+    <div class="header-container">
+      <!-- عکس سمت راست -->
+      <img src="logo1.png" class="header-logo" alt="لوگو" onerror="this.style.display='none'">
+      
+      <!-- عنوان سایت -->
+      <div class="header-titles" onclick="handleHeaderClick()">
+        <h1 id="siteTitle">دهیاری‌های بخش مرکزی سقز</h1>
+        <div class="sub" id="siteSub">سامانه اطلاعات دهیاری‌ها</div>
+      </div>
+      
+      <!-- عکس سمت چپ -->
+      <img src="logo2.png" class="header-logo" alt="لوگو" onerror="this.style.display='none'">
+    </div>
   </header>
 
   <div class="select-wrapper">
@@ -91,7 +99,7 @@
   </div>
 </div> <!-- پایان main-site -->
 
-<script src="data.js" onerror="console.log('data.js یافت نشد')"></script>
-<script src="app.js"></script>
+<script src="data.js?v=1.3" onerror="console.log('data.js یافت نشد')"></script>
+<script src="app.js?v=1.3"></script>
 </body>
 </html>
