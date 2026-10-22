@@ -79,8 +79,15 @@ function renderTabContent(d, secKey) {
   const fields = (d.fields && d.fields[secKey]) || {};
   let inner = "";
   
+  // دکمه دانلود کارت شناسایی (فقط در منوی مشخصات دهیار)
+  if (secKey === "dehyar") {
+    inner += `<div style="text-align: center; margin-bottom: 15px;">
+      <button onclick="generateIDCard()" class="btn btn-success" style="padding: 10px 20px; border-radius: 8px;">📥 دانلود کارت شناسایی دهیار</button>
+    </div>`;
+  }
+
   if (Object.keys(fields).length === 0) { 
-    inner = "<p style='color:#6ba3c9; text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>"; 
+    inner += "<p style='color:#6ba3c9; text-align:center;'>اطلاعاتی برای این بخش ثبت نشده است.</p>"; 
   } else {
     Object.entries(fields).forEach(([k, v]) => {
       if (v && typeof v === 'object' && v.type === 'image') {
@@ -89,9 +96,7 @@ function renderTabContent(d, secKey) {
         if (v.text) inner += `<span style="color:#264a6e; margin-top:5px;">${escapeHtml(v.text)}</span>`;
         inner += `</div>`;
       } else {
-        // 🔐 بررسی اینکه آیا این فیلد باید هاشور زده باشد یا نه
         const isSecret = k.includes("ملی") || k.includes("تلفن") || k.includes("رمز");
-        
         if (isSecret) {
           inner += `<div class="info-row">
             <span class="label">${escapeHtml(k)}:</span>
@@ -126,6 +131,69 @@ window.revealSecret = function(secKey, fieldName, realValue) {
   } else {
     alert("❌ رمز عبور اشتباه است!");
   }
+};
+
+// 🪪 تابع ساخت و دانلود کارت شناسایی
+window.generateIDCard = function() {
+  const id = document.getElementById("dehyariSelect").value;
+  if (id === "") { alert("لطفاً ابتدا یک دهیاری را انتخاب کنید."); return; }
+  
+  const d = DATA.dehyaris[Number(id)];
+  const dehyarFields = d.fields["dehyar"] || {};
+  
+  let name = "-", phone = "-", nationalId = "-", role = "دهیار", imgUrl = "";
+  
+  Object.entries(dehyarFields).forEach(([k, v]) => {
+    if (k.includes("نام")) name = v;
+    if (k.includes("تلفن")) phone = v;
+    if (k.includes("ملی")) nationalId = v;
+    if (v && typeof v === 'object' && v.type === 'image' && v.img) imgUrl = v.img;
+  });
+
+  const cardHTML = `
+    <div id="printable-card" style="width: 600px; height: 350px; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%); border-radius: 20px; border: 4px solid #4fc3f7; padding: 20px; display: flex; font-family: Tahoma, sans-serif; position: relative; overflow: hidden; direction: rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 70px; background: #4fc3f7; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: bold;">
+        کارت شناسایی دهیاری
+      </div>
+      <div style="margin-top: 80px; width: 150px; height: 150px; border-radius: 15px; border: 4px solid #29b6f6; background: #e1f5fe; overflow: hidden; flex-shrink: 0;">
+        ${imgUrl ? `<img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6ba3c9;">بدون عکس</div>`}
+      </div>
+      <div style="margin-top: 80px; margin-right: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <h2 style="color: #0277bd; margin: 0 0 10px 0; font-size: 24px;">${name}</h2>
+          <p style="color: #546e7a; margin: 0 0 5px 0; font-size: 16px;"><b>سمت:</b> ${role}</p>
+          <p style="color: #546e7a; margin: 0 0 5px 0; font-size: 16px;"><b>کد ملی:</b> ${nationalId}</p>
+          <p style="color: #546e7a; margin: 0 0 5px 0; font-size: 16px;"><b>تلفن:</b> ${phone}</p>
+        </div>
+        <div style="text-align: left; color: #6ba3c9; font-size: 12px; margin-top: 20px;">
+          <p style="margin: 0;">دهیاری: ${d.name}</p>
+          <p style="margin: 0;">تاریخ صدور: ${new Date().toLocaleDateString('fa-IR')}</p>
+        </div>
+      </div>
+      <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: rgba(79, 195, 247, 0.1); border-radius: 50%;"></div>
+    </div>
+  `;
+
+  const container = document.createElement("div");
+  container.innerHTML = cardHTML;
+  document.body.appendChild(container);
+
+  if(typeof html2canvas === "undefined") {
+    alert("کتابخانه ساخت کارت لود نشده است. لطفاً اینترنت خود را بررسی کنید.");
+    document.body.removeChild(container);
+    return;
+  }
+
+  html2canvas(container.firstElementChild, { scale: 2 }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = `کارت_شناسایی_${name}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    document.body.removeChild(container);
+  }).catch(err => {
+    alert("خطا در ساخت کارت: " + err.message);
+    document.body.removeChild(container);
+  });
 };
 
 async function hashPassword(pass) { const enc = new TextEncoder().encode(pass + "|salt"); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join(""); }
