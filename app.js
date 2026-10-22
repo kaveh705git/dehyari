@@ -45,34 +45,34 @@ function loadTheme() {
 window.filterDehyari = function() {
   const search = document.getElementById("searchInput").value.trim();
   const sel = document.getElementById("dehyariSelect");
-  
-  if (!DATA || !DATA.dehyaris) return; // اگر دیتا لود نشده بود، خارج شو
-
+  if (!DATA || !DATA.dehyaris) return;
   sel.innerHTML = '<option value="">-- یک دهیاری را انتخاب کنید --</option>';
-  
   let found = false;
   DATA.dehyaris.forEach((d, i) => {
     if (d.name.includes(search)) {
       const o = document.createElement("option");
-      o.value = i; 
-      o.textContent = d.name;
+      o.value = i; o.textContent = d.name;
       sel.appendChild(o);
       found = true;
     }
   });
-
   if (!found && search !== "") {
     const o = document.createElement("option");
-    o.value = ""; 
-    o.textContent = "موردی یافت نشد";
+    o.value = ""; o.textContent = "موردی یافت نشد";
     sel.appendChild(o);
   }
 };
 
-// 🖨️ چاپ
-window.printDehyari = function() {
-  window.print();
+// انتخاب از لیست و بستن آن
+window.selectDehyari = function(id) {
+  document.getElementById("dehyariDropdown").style.display = "none";
+  document.getElementById("searchInput").value = "";
+  showDehyari(id);
+  populateSelect();
 };
+
+// 🖨️ چاپ
+window.printDehyari = function() { window.print(); };
 
 function loadInitialData() {
   if (typeof INITIAL_DATA !== "undefined") { DATA = JSON.parse(JSON.stringify(INITIAL_DATA)); localStorage.setItem("dehyari_panel_v7", JSON.stringify(DATA)); } 
@@ -172,7 +172,7 @@ window.revealSecret = function(secKey, fieldName, realValue) {
   } else { alert("❌ رمز عبور اشتباه است!"); }
 };
 
-// 🪪 کارت شناسایی (نسخه رنگی)
+// 🪪 کارت شناسایی
 window.generateIDCard = function() {
   const id = document.getElementById("dehyariSelect").value;
   if (id === "") { alert("لطفاً ابتدا یک دهیاری را انتخاب کنید."); return; }
@@ -250,7 +250,6 @@ window.switchTab = function(tab) {
   if (tab === "sections") renderSectionsTab(); if (tab === "dehyaris") renderDehyarisTab(); if (tab === "settings") renderSettingsTab(); if (tab === "security") renderSecurityTab(); if (tab === "backup") renderBackupTab(); if (tab === "dashboard") renderDashboardTab();
 };
 
-// 📊 داشبورد آماری
 function renderDashboardTab() {
   const box = document.getElementById("tab-dashboard"); if(!box) return;
   let totalDehyari = DATA.dehyaris.length;
@@ -308,7 +307,7 @@ function renderFieldsForSection(secKey) {
         html += `<div style="background:var(--bg-card); padding:10px; border-radius:6px; border:1px solid var(--border);">`;
         if (v.img) html += `<img src="${v.img}" style="max-width:100%; max-height:150px; border-radius:6px; margin-bottom:8px; display:block;">`;
         html += `<label style="font-size:0.8rem; color:var(--primary);">آپلود عکس:</label>`;
-        html += `<select id="size_${secKey}_${idx}" style="width:100%; margin-bottom:8px; padding:6px; border-radius:6px; border:1px solid var(--border); font-family:inherit; font-size:0.8rem;">
+        html += `<select id="size_${secKey}_${idx}" style="width:100%; margin-bottom:8px; padding:6px; border-radius:6px; border:1px solid var(--border); font-family:inherit; font-size:0.8rem; background:var(--bg-body); color:var(--text-main);">
           <option value="personnel">عکس پرسنلی (مربع)</option>
           <option value="custom">اندازه دلخواه</option>
         </select>`;
