@@ -7,23 +7,68 @@
   padding: 0; 
   font-family: 'Vazirmatn', Tahoma, sans-serif; 
 }
-body { background: #f0f8ff; color: #1a3a5c; min-height: 100vh; }
-header { background: linear-gradient(135deg, #4fc3f7, #29b6f6); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 100; cursor: pointer; user-select: none; }
-header h1 { font-size: 1.5rem; }
-header .sub { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+
+body { 
+  background: #f0f8ff; 
+  color: #1a3a5c; 
+  min-height: 100vh; 
+}
+
+/* هدر و عنوان سایت با عکس */
+header { 
+  background: linear-gradient(135deg, #4fc3f7, #29b6f6); 
+  color: white; 
+  padding: 15px 20px; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-logo {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px;
+}
+
+.header-titles {
+  text-align: center;
+  flex: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+header h1 { font-size: 1.4rem; margin-bottom: 3px; }
+header .sub { font-size: 0.85rem; opacity: 0.9; }
+
+/* منوی انتخاب دهیاری */
 .select-wrapper { max-width: 500px; margin: 25px auto 10px; padding: 0 15px; }
 .select-wrapper label { display: block; margin-bottom: 8px; font-weight: bold; color: #0277bd; }
 select { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #4fc3f7; border-radius: 10px; background: white; color: #1a3a5c; cursor: pointer; outline: none; }
 #content { max-width: 800px; margin: 20px auto 40px; padding: 0 15px; }
+
+/* کارت اصلی */
 .card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(2, 136, 209, 0.12); overflow: hidden; }
 .card-header { background: #4fc3f7; color: white; padding: 15px 20px; font-size: 1.2rem; font-weight: bold; }
+
 /* استایل منوهای افقی */
 .tabs-container { 
   display: flex; 
   width: 100%; 
   background: #f8fdff; 
   border-bottom: 2px solid #e1f5fe; 
-  overflow-x: auto; /* اگر در گوشی خیلی کوچک بود، اسکرول بخورد */
+  overflow-x: auto; 
 }
 
 .main-tab-btn { 
@@ -33,7 +78,7 @@ select { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #4fc3f7;
   border: none; 
   border-bottom: 3px solid transparent; 
   color: #6ba3c9; 
-  font-size: 0.85rem; /* کمی کوچک‌تر برای جا شدن در گوشی */
+  font-size: 0.85rem; 
   font-weight: bold; 
   cursor: pointer; 
   white-space: nowrap; 
@@ -43,8 +88,6 @@ select { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #4fc3f7;
 
 .main-tab-btn:hover { background: #e1f5fe; color: #0277bd; }
 .main-tab-btn.active { color: #0277bd; border-bottom-color: #29b6f6; background: #e1f5fe; }
-.main-tab-btn:hover { background: #e1f5fe; color: #0277bd; }
-.main-tab-btn.active { color: #0277bd; border-bottom-color: #29b6f6; background: #e1f5fe; }
 
 .tab-content-area { padding: 20px; min-height: 150px; }
 .info-row { display: flex; padding: 10px 0; border-bottom: 1px dashed #cce9f7; }
@@ -52,7 +95,7 @@ select { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #4fc3f7;
 .info-row .label { font-weight: bold; color: #0277bd; min-width: 150px; }
 .empty-msg { text-align: center; padding: 50px 20px; color: #6ba3c9; font-size: 1.05rem; }
 
-/* پنل ادمین */
+/* پنل ادمین (مودال) */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; padding: 10px; }
 .modal-overlay.active { display: flex; }
 .modal { background: white; border-radius: 14px; max-width: 900px; width: 100%; max-height: 95vh; display: flex; flex-direction: column; }
