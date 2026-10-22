@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>دهیاری‌های بخش مرکزی سقز</title>
-<!-- نسخه CSS به 2.0 تغییر کرد -->
-<link rel="stylesheet" href="style.css?v=2.0">
+<link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
 
@@ -28,28 +27,29 @@
       <!-- دکمه تغییر تم (شب/روز) -->
       <button id="themeToggle" class="theme-btn" onclick="toggleTheme()" title="تغییر حالت شب و روز">🌙</button>
       
-      <!-- عکس سمت راست -->
-      <img src="logo1.png" class="header-logo" alt="لوگو" onerror="this.style.display='none'">
-      
       <!-- عنوان سایت -->
       <div class="header-titles" onclick="handleHeaderClick()">
         <h1 id="siteTitle">دهیاری‌های بخش مرکزی سقز</h1>
         <div class="sub" id="siteSub">سامانه اطلاعات دهیاری‌ها</div>
       </div>
-      
-      <!-- عکس سمت چپ -->
-      <img src="logo2.png" class="header-logo" alt="لوگو" onerror="this.style.display='none'">
     </div>
   </header>
 
-  <div class="select-wrapper">
+  <div class="select-wrapper" style="position: relative;">
     <label for="searchInput">📋 انتخاب یا جستجوی دهیاری:</label>
-    <!-- کادر جستجوی جدید -->
-    <input type="text" id="searchInput" placeholder="🔍 نام دهیاری را تایپ کنید..." onkeyup="filterDehyari()" style="margin-bottom: 10px; padding: 12px; border: 2px solid var(--primary); border-radius: 10px; width: 100%; box-sizing: border-box; font-family: inherit; background: var(--bg-card); color: var(--text-main); outline: none;">
     
-    <select id="dehyariSelect" onchange="showDehyari(this.value)">
-      <option value="">-- یک دهیاری را انتخاب کنید --</option>
-    </select>
+    <!-- کادر جستجو (به عنوان منوی اصلی عمل می‌کند) -->
+    <input type="text" id="searchInput" placeholder="🔍 نام دهیاری را تایپ کنید..." 
+           onkeyup="filterDehyari()" 
+           onclick="document.getElementById('dehyariDropdown').style.display='block'" 
+           style="width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 10px; font-size: 1rem; outline: none; background: var(--bg-card); color: var(--text-main); font-family: inherit; box-sizing: border-box;">
+    
+    <!-- لیست کشویی که زیر کادر جستجو باز می‌شود -->
+    <div id="dehyariDropdown" style="display: none; position: absolute; top: 100%; left: 15px; right: 15px; background: var(--bg-card); border: 2px solid var(--primary); border-top: none; border-radius: 0 0 10px 10px; max-height: 250px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+      <select id="dehyariSelect" onchange="selectDehyari(this.value)" style="width: 100%; padding: 12px; border: none; border-radius: 0 0 8px 8px; background: var(--bg-card); color: var(--text-main); outline: none; font-family: inherit; font-size: 1rem;" size="5">
+        <option value="">-- یک دهیاری را انتخاب کنید --</option>
+      </select>
+    </div>
   </div>
 
   <div id="content">
@@ -112,8 +112,8 @@
 <!-- کتابخانه ساخت کارت شناسایی -->
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
-<!-- فایل‌های اصلی برنامه (نسخه 2.0) -->
-<script src="data.js?v=2.0" onerror="console.log('data.js یافت نشد')"></script>
-<script src="app.js"></script>
+<!-- فایل‌های اصلی برنامه -->
+<script src="data.js?v=3.0" onerror="console.log('data.js یافت نشد')"></script>
+<script src="app.js?v=3.0"></script>
 </body>
 </html>
