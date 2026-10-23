@@ -172,7 +172,7 @@ window.revealSecret = function(secKey, fieldName, realValue) {
   } else { alert("❌ رمز عبور اشتباه است!"); }
 };
 
-// 🪪 کارت شناسایی
+// 🪪 کارت شناسایی (با عکس پس‌زمینه محو)
 window.generateIDCard = function() {
   const id = document.getElementById("dehyariSelect").value;
   if (id === "") { alert("لطفاً ابتدا یک دهیاری را انتخاب کنید."); return; }
@@ -187,13 +187,25 @@ window.generateIDCard = function() {
     if (v && typeof v === 'object' && v.type === 'image' && v.img) imgUrl = v.img;
   });
 
+  // استفاده از عکس پس‌زمینه (اگر وجود داشته باشد)
+  let bgImageHTML = "";
+  if (d.cardBgImage) {
+    bgImageHTML = `<img src="${d.cardBgImage}" style="position: absolute; left: -20px; top: 80px; width: 220px; height: 220px; opacity: 0.15; object-fit: contain; pointer-events: none;">`;
+  }
+
   const cardHTML = `
     <div id="printable-card" style="width: 600px; height: 350px; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%); border-radius: 20px; border: 4px solid #4fc3f7; padding: 20px; display: flex; font-family: Tahoma, sans-serif; position: relative; overflow: hidden; direction: rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-      <div style="position: absolute; top: 0; left: 0; right: 0; height: 70px; background: #4fc3f7; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: bold;">کارت شناسایی دهیاری</div>
-      <div style="margin-top: 80px; width: 150px; height: 150px; border-radius: 15px; border: 4px solid #29b6f6; background: #e1f5fe; overflow: hidden; flex-shrink: 0;">
+      
+      <!-- عکس پس‌زمینه محو -->
+      ${bgImageHTML}
+
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 70px; background: #4fc3f7; border-radius: 15px 15px 0 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: bold; z-index: 2;">کارت شناسایی دهیاری</div>
+      
+      <div style="margin-top: 80px; width: 150px; height: 150px; border-radius: 15px; border: 4px solid #29b6f6; background: #e1f5fe; overflow: hidden; flex-shrink: 0; z-index: 2;">
         ${imgUrl ? `<img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6ba3c9;">بدون عکس</div>`}
       </div>
-      <div style="margin-top: 80px; margin-right: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+      
+      <div style="margin-top: 80px; margin-right: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; z-index: 2;">
         <div>
           <h2 style="color: #0277bd; margin: 0 0 10px 0; font-size: 24px;">${name}</h2>
           <p style="color: #546e7a; margin: 0 0 5px 0; font-size: 16px;"><b>سمت:</b> ${role}</p>
@@ -205,9 +217,12 @@ window.generateIDCard = function() {
           <p style="margin: 0;">تاریخ صدور: ${new Date().toLocaleDateString('fa-IR')}</p>
         </div>
       </div>
-      <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: rgba(79, 195, 247, 0.1); border-radius: 50%;"></div>
+      
+      <!-- شکل تزئینی پایین -->
+      <div style="position: absolute; bottom: -50px; left: -50px; width: 200px; height: 200px; background: rgba(79, 195, 247, 0.1); border-radius: 50%; z-index: 1;"></div>
     </div>
   `;
+  
   const container = document.createElement("div"); container.innerHTML = cardHTML; document.body.appendChild(container);
   if(typeof html2canvas === "undefined") { alert("کتابخانه ساخت کارت لود نشده است."); document.body.removeChild(container); return; }
   html2canvas(container.firstElementChild, { scale: 2 }).then(canvas => {
@@ -298,6 +313,7 @@ function renderDehyarisTab() {
 function renderFieldsForSection(secKey) {
   const d = DATA.dehyaris[editingDehyariIndex]; const container = document.getElementById("fields-" + secKey); if (!container) return;
   const fields = d.fields[secKey] || {}; let html = ""; const entries = Object.entries(fields);
+  
   if (entries.length === 0) html = `<div class="empty-box" style="padding:10px;">فیلدی ندارد.</div>`;
   else {
     entries.forEach(([k, v], idx) => {
@@ -322,6 +338,16 @@ function renderFieldsForSection(secKey) {
       html += `</div>`;
     });
   }
+  
+  // اضافه کردن دکمه آپلود عکس پس‌زمینه کارت (فقط در بخش مشخصات دهیار)
+  if (secKey === "dehyar") {
+    html += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ff9800; border-radius: 8px;">
+      <label style="font-size:0.85rem; color:#ff9800; font-weight:bold;">🖼️ عکس پس‌زمینه کارت شناسایی (اختیاری):</label>
+      <input type="file" accept="image/*" onchange="uploadCardBackground(event)" style="font-size:0.8rem; margin-top:8px; display:block;">
+      <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">این عکس با حالت محو در پشت کارت قرار می‌گیرد.</div>
+    </div>`;
+  }
+  
   container.innerHTML = html;
 }
 
@@ -373,6 +399,19 @@ window.uploadImage = function(event, secKey, idx) {
       if (keys[idx]) { d.fields[secKey][keys[idx]].img = dataUrl; persist(); renderFieldsForSection(secKey); }
     };
     img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+// تابع ذخیره عکس پس‌زمینه کارت
+window.uploadCardBackground = function(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const d = DATA.dehyaris[editingDehyariIndex];
+    d.cardBgImage = e.target.result;
+    persist();
+    alert("✅ عکس پس‌زمینه کارت ذخیره شد.");
   };
   reader.readAsDataURL(file);
 };
